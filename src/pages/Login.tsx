@@ -1,10 +1,28 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { BookOpen, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+    } else {
+      navigate("/feed");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background px-6 pt-16 pb-8">
@@ -21,15 +39,15 @@ export default function Login() {
           Enter your sanctuary.
         </p>
 
-        <form
-          onSubmit={(e) => { e.preventDefault(); navigate("/feed"); }}
-          className="space-y-6"
-        >
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
             <label className="label-uppercase text-xs block mb-2">Email Address</label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="archivist@atelier.com"
+              required
               className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 font-body"
             />
           </div>
@@ -44,7 +62,10 @@ export default function Login() {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                required
                 className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors pr-10 font-body"
               />
               <button
@@ -59,9 +80,10 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full bg-primary text-primary-foreground py-4 rounded-sm label-uppercase text-sm mt-4 hover:opacity-90 transition-opacity active:scale-[0.98]"
+            disabled={loading}
+            className="w-full bg-primary text-primary-foreground py-4 rounded-sm label-uppercase text-sm mt-4 hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50"
           >
-            Enter The Atelier
+            {loading ? "Entering…" : "Enter The Atelier"}
           </button>
         </form>
 
