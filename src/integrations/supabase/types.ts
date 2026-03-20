@@ -14,16 +14,361 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookstore_listings: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          listing_type: Database["public"]["Enums"]["book_listing_type"]
+          price_cents: number
+          rental_days: number | null
+          seller_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          listing_type?: Database["public"]["Enums"]["book_listing_type"]
+          price_cents: number
+          rental_days?: number | null
+          seller_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          listing_type?: Database["public"]["Enums"]["book_listing_type"]
+          price_cents?: number
+          rental_days?: number | null
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookstore_listings_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      club_members: {
+        Row: {
+          club_id: string
+          id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "club_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clubs: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_private: boolean | null
+          name: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_private?: boolean | null
+          name: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_private?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      comments: {
+        Row: {
+          body: string
+          content_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          content_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          content_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts: {
+        Row: {
+          contact_user_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          contact_user_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          contact_user_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      contents: {
+        Row: {
+          author_id: string
+          body: string | null
+          content_type: Database["public"]["Enums"]["content_type"]
+          cover_image_url: string | null
+          created_at: string
+          id: string
+          is_monetized: boolean | null
+          price_cents: number | null
+          status: Database["public"]["Enums"]["content_status"]
+          tags: string[] | null
+          title: string
+          updated_at: string
+          view_count: number | null
+        }
+        Insert: {
+          author_id: string
+          body?: string | null
+          content_type: Database["public"]["Enums"]["content_type"]
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_monetized?: boolean | null
+          price_cents?: number | null
+          status?: Database["public"]["Enums"]["content_status"]
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Update: {
+          author_id?: string
+          body?: string | null
+          content_type?: Database["public"]["Enums"]["content_type"]
+          cover_image_url?: string | null
+          created_at?: string
+          id?: string
+          is_monetized?: boolean | null
+          price_cents?: number | null
+          status?: Database["public"]["Enums"]["content_status"]
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      likes: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string
+          id: string
+          interests: string[] | null
+          persona: Database["public"]["Enums"]["persona_type"] | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          interests?: string[] | null
+          persona?: Database["public"]["Enums"]["persona_type"] | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          interests?: string[] | null
+          persona?: Database["public"]["Enums"]["persona_type"] | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          amount_cents: number
+          buyer_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          listing_id: string
+        }
+        Insert: {
+          amount_cents: number
+          buyer_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          listing_id: string
+        }
+        Update: {
+          amount_cents?: number
+          buyer_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          listing_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "bookstore_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
+      book_listing_type: "buy" | "rent"
+      content_status: "draft" | "pending_review" | "published" | "rejected"
+      content_type:
+        | "novel"
+        | "comic"
+        | "article"
+        | "newspaper"
+        | "research_paper"
+        | "thesis"
+        | "journal"
+        | "short_story"
+        | "quote"
+        | "poem"
+        | "inspiration"
+      persona_type: "scribe" | "scholar" | "curator" | "artiste"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +495,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+      book_listing_type: ["buy", "rent"],
+      content_status: ["draft", "pending_review", "published", "rejected"],
+      content_type: [
+        "novel",
+        "comic",
+        "article",
+        "newspaper",
+        "research_paper",
+        "thesis",
+        "journal",
+        "short_story",
+        "quote",
+        "poem",
+        "inspiration",
+      ],
+      persona_type: ["scribe", "scholar", "curator", "artiste"],
+    },
   },
 } as const

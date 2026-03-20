@@ -2,37 +2,41 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, PenLine, GraduationCap, BookOpen, Paintbrush } from "lucide-react";
 import OnboardingHeader from "@/components/OnboardingHeader";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const personas = [
-  {
-    icon: PenLine,
-    name: "The Scribe",
-    tag: "Writer/Author",
-    desc: "Dedicated to the craft of long-form prose, essays, and the rhythmic flow of ink on digital vellum.",
-  },
-  {
-    icon: GraduationCap,
-    name: "The Scholar",
-    tag: "Researcher/Academic",
-    desc: "Analyzing historical contexts and deep-diving into the archives of human knowledge and critique.",
-  },
-  {
-    icon: BookOpen,
-    name: "The Curator",
-    tag: "Reader/Enthusiast",
-    desc: "A bibliophile with an eye for quality. You live to discover hidden gems and organize the world's wisdom.",
-  },
-  {
-    icon: Paintbrush,
-    name: "The Artiste",
-    tag: "Comic Creator/Illustrator",
-    desc: "Merging visual storytelling with narrative depth. You create worlds where the image speaks volumes.",
-  },
+  { icon: PenLine, name: "The Scribe", tag: "Writer/Author", key: "scribe" as const, desc: "Dedicated to the craft of long-form prose, essays, and the rhythmic flow of ink on digital vellum." },
+  { icon: GraduationCap, name: "The Scholar", tag: "Researcher/Academic", key: "scholar" as const, desc: "Analyzing historical contexts and deep-diving into the archives of human knowledge and critique." },
+  { icon: BookOpen, name: "The Curator", tag: "Reader/Enthusiast", key: "curator" as const, desc: "A bibliophile with an eye for quality. You live to discover hidden gems and organize the world's wisdom." },
+  { icon: Paintbrush, name: "The Artiste", tag: "Comic Creator/Illustrator", key: "artiste" as const, desc: "Merging visual storytelling with narrative depth. You create worlds where the image speaks volumes." },
 ];
 
 export default function OnboardingPersona() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [selected, setSelected] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const handleContinue = async () => {
+    if (selected === null) return;
+    if (!user) { navigate("/login"); return; }
+
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ persona: personas[selected].key })
+      .eq("user_id", user.id);
+    setSaving(false);
+
+    if (error) {
+      toast({ title: "Error saving persona", description: error.message, variant: "destructive" });
+    } else {
+      navigate("/onboarding/interests");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -55,26 +59,16 @@ export default function OnboardingPersona() {
                 key={p.name}
                 onClick={() => setSelected(i)}
                 className={`w-full text-left p-6 rounded-sm transition-all animate-fade-up ${
-                  isSelected
-                    ? "bg-primary text-primary-foreground shadow-lg"
-                    : "bg-card hover:bg-secondary"
+                  isSelected ? "bg-primary text-primary-foreground shadow-lg" : "bg-card hover:bg-secondary"
                 }`}
                 style={{ animationDelay: `${0.15 + i * 0.08}s` }}
               >
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center mb-4 ${
-                    isSelected ? "bg-primary-foreground/20" : "bg-secondary"
-                  }`}
-                >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-4 ${isSelected ? "bg-primary-foreground/20" : "bg-secondary"}`}>
                   <Icon className="w-5 h-5" />
                 </div>
                 <h3 className="font-display text-xl font-semibold">{p.name}</h3>
-                <p className={`label-uppercase text-xs mt-1 ${isSelected ? "text-accent" : "text-accent"}`}>
-                  {p.tag}
-                </p>
-                <p className={`mt-3 text-sm leading-relaxed ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                  {p.desc}
-                </p>
+                <p className="label-uppercase text-xs mt-1 text-accent">{p.tag}</p>
+                <p className={`mt-3 text-sm leading-relaxed ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>{p.desc}</p>
               </button>
             );
           })}
@@ -82,17 +76,17 @@ export default function OnboardingPersona() {
       </main>
 
       <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-6 py-4 border-t border-border bg-background">
-        <button
-          onClick={() => navigate("/onboarding")}
-          className="flex items-center gap-2 text-muted-foreground label-uppercase text-xs"
-        >
+        <button onClick={() => navigate("/onboarding")} className="flex items-center gap-2 text-muted-foreground label-uppercase text-xs">
           <ArrowLeft className="w-4 h-4" /> Previous
         </button>
         <button
-          onClick={() => navigate("/onboarding/interests")}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-sm label-uppercase text-xs active:scale-[0.97] transition-transform"
+          onClick={handleContinue}
+          disabled={selected === null || saving}
+          className={`flex items-center gap-2 px-6 py-3 rounded-sm label-uppercase text-xs transition-all active:scale-[0.97] ${
+            selected !== null ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground cursor-not-allowed"
+          }`}
         >
-          Continue <ArrowRight className="w-4 h-4" />
+          {saving ? "Saving…" : "Continue"} <ArrowRight className="w-4 h-4" />
         </button>
       </footer>
     </div>

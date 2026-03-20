@@ -1,15 +1,44 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { BookOpen, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const strength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
   const strengthLabel = ["", "Weak", "Good", "Strong"][strength];
   const strengthColor = ["", "bg-destructive", "bg-accent", "bg-green-600"][strength];
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length < 8) {
+      toast({ title: "Password too short", description: "Use at least 8 characters.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Signup failed", description: error.message, variant: "destructive" });
+    } else {
+      navigate("/onboarding");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background px-6 pt-10 pb-8">
@@ -26,15 +55,15 @@ export default function Signup() {
           Join a sanctuary for deep thought.
         </p>
 
-        <form
-          onSubmit={(e) => { e.preventDefault(); navigate("/onboarding"); }}
-          className="space-y-6"
-        >
+        <form onSubmit={handleSignup} className="space-y-6">
           <div>
             <label className="label-uppercase text-xs block mb-2">Your Name</label>
             <input
               type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="E.g. Julian Barnes"
+              required
               className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 font-body"
             />
           </div>
@@ -43,7 +72,10 @@ export default function Signup() {
             <label className="label-uppercase text-xs block mb-2">Email Address</label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="archivist@atelier.com"
+              required
               className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 font-body"
             />
           </div>
@@ -55,6 +87,7 @@ export default function Signup() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
                 className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors pr-10 font-body"
               />
               <button
@@ -87,9 +120,10 @@ export default function Signup() {
 
           <button
             type="submit"
-            className="w-full bg-primary text-primary-foreground py-4 rounded-sm label-uppercase text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98]"
+            disabled={loading}
+            className="w-full bg-primary text-primary-foreground py-4 rounded-sm label-uppercase text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50"
           >
-            Begin Your Journey <span>→</span>
+            {loading ? "Creating…" : <>Begin Your Journey <span>→</span></>}
           </button>
         </form>
 

@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import OnboardingHeader from "@/components/OnboardingHeader";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const topics = [
   "Philosophy", "Afrofuturism", "Ancient History", "Modern Poetry",
@@ -12,12 +15,32 @@ const topics = [
 
 export default function OnboardingInterests() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [selected, setSelected] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const toggle = (topic: string) => {
     setSelected((prev) =>
       prev.includes(topic) ? prev.filter((t) => t !== topic) : [...prev, topic]
     );
+  };
+
+  const handleContinue = async () => {
+    if (selected.length < 3 || !user) return;
+
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ interests: selected })
+      .eq("user_id", user.id);
+    setSaving(false);
+
+    if (error) {
+      toast({ title: "Error saving interests", description: error.message, variant: "destructive" });
+    } else {
+      navigate("/feed");
+    }
   };
 
   return (
@@ -67,15 +90,15 @@ export default function OnboardingInterests() {
           <ArrowLeft className="w-4 h-4" /> Previous
         </button>
         <button
-          onClick={() => navigate("/feed")}
+          onClick={handleContinue}
+          disabled={selected.length < 3 || saving}
           className={`flex items-center gap-2 px-6 py-3 rounded-sm label-uppercase text-xs transition-all active:scale-[0.97] ${
             selected.length >= 3
               ? "bg-primary text-primary-foreground"
               : "bg-muted text-muted-foreground cursor-not-allowed"
           }`}
-          disabled={selected.length < 3}
         >
-          Continue <ArrowRight className="w-4 h-4" />
+          {saving ? "Saving…" : "Continue"} <ArrowRight className="w-4 h-4" />
         </button>
       </footer>
     </div>
