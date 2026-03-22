@@ -181,6 +181,7 @@ export type Database = {
           is_monetized: boolean | null
           price_cents: number | null
           status: Database["public"]["Enums"]["content_status"]
+          style: Json | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -196,6 +197,7 @@ export type Database = {
           is_monetized?: boolean | null
           price_cents?: number | null
           status?: Database["public"]["Enums"]["content_status"]
+          style?: Json | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -211,6 +213,7 @@ export type Database = {
           is_monetized?: boolean | null
           price_cents?: number | null
           status?: Database["public"]["Enums"]["content_status"]
+          style?: Json | null
           tags?: string[] | null
           title?: string
           updated_at?: string

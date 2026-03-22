@@ -14,6 +14,7 @@ import OnboardingPersona from "./pages/OnboardingPersona";
 import OnboardingInterests from "./pages/OnboardingInterests";
 import Feed from "./pages/Feed";
 import QuoteEditor from "./pages/QuoteEditor";
+import QuotePublishSettings from "./pages/QuotePublishSettings";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/onboarding/interests" element={<OnboardingInterests />} />
             <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><QuoteEditor /></ProtectedRoute>} />
+            <Route path="/create/publish" element={<ProtectedRoute><QuotePublishSettings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

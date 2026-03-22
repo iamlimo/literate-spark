@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Heart, MessageSquare, Share2, Bookmark, MoreHorizontal, BookOpen } from "lucide-react";
+import { Heart, MessageSquare, Share2, Bookmark, MoreHorizontal, BookOpen, Feather } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import heroImg from "@/assets/hero-manuscripts.jpg";
 
@@ -67,6 +68,7 @@ const feedItems = [
 
 export default function Feed() {
   const [activeFilter, setActiveFilter] = useState("For You");
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -220,6 +222,14 @@ export default function Feed() {
           <span className="label-uppercase text-xs text-accent">Read Now →</span>
         </article>
       </div>
+
+      {/* FAB */}
+      <button
+        onClick={() => navigate("/create")}
+        className="fixed bottom-20 right-5 z-50 w-14 h-14 rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-lg shadow-accent/20 active:scale-90 transition-transform animate-fade-in"
+      >
+        <Feather className="w-5 h-5" />
+      </button>
 
       <BottomNav />
     </div>
