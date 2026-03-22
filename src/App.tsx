@@ -14,6 +14,7 @@ import OnboardingPersona from "./pages/OnboardingPersona";
 import OnboardingInterests from "./pages/OnboardingInterests";
 import Feed from "./pages/Feed";
 import QuoteEditor from "./pages/QuoteEditor";
+import QuotePublishSettings from "./pages/QuotePublishSettings";
 
 const queryClient = new QueryClient();
 
