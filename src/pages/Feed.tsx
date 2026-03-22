@@ -68,6 +68,7 @@ const feedItems = [
 
 export default function Feed() {
   const [activeFilter, setActiveFilter] = useState("For You");
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background pb-20">
