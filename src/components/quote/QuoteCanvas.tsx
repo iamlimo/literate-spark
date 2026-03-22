@@ -1,13 +1,14 @@
 import type { QuoteStyle } from "@/hooks/useQuoteEditor";
 
-interface QuoteCanvasProps {
+export interface QuoteCanvasProps {
   text: string;
   authorName: string;
   style: QuoteStyle;
-  isDark: boolean;
+  isDark?: boolean;
   editable?: boolean;
   onTextChange?: (val: string) => void;
   onTap?: () => void;
+  compact?: boolean;
 }
 
 const frameClass: Record<QuoteStyle["frame"], string> = {
