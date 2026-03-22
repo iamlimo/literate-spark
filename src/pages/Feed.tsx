@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Heart, MessageSquare, Share2, Bookmark, MoreHorizontal, BookOpen } from "lucide-react";
+import { Heart, MessageSquare, Share2, Bookmark, MoreHorizontal, BookOpen, Feather } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import heroImg from "@/assets/hero-manuscripts.jpg";
 
