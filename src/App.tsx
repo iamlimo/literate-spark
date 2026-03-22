@@ -34,6 +34,7 @@ const App = () => (
             <Route path="/onboarding/interests" element={<OnboardingInterests />} />
             <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><QuoteEditor /></ProtectedRoute>} />
+            <Route path="/create/publish" element={<ProtectedRoute><QuotePublishSettings /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

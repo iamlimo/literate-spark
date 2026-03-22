@@ -223,6 +223,14 @@ export default function Feed() {
         </article>
       </div>
 
+      {/* FAB */}
+      <button
+        onClick={() => navigate("/create")}
+        className="fixed bottom-20 right-5 z-50 w-14 h-14 rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-lg shadow-accent/20 active:scale-90 transition-transform animate-fade-in"
+      >
+        <Feather className="w-5 h-5" />
+      </button>
+
       <BottomNav />
     </div>
   );
