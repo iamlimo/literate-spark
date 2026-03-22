@@ -81,7 +81,7 @@ export default function QuoteCanvas({
           )}
 
           {/* Divider */}
-          <div className="w-12 h-px mx-auto mb-4" style={{ backgroundColor: borderColor, marginLeft: style.alignment === "left" ? 0 : style.alignment === "right" ? "auto" : undefined, marginRight: style.alignment === "right" ? 0 : style.alignment === "right" ? undefined : undefined }} />
+          <div className="w-12 h-px mb-4" style={{ backgroundColor: borderColor, marginLeft: style.alignment === "center" ? "auto" : style.alignment === "right" ? "auto" : 0, marginRight: style.alignment === "center" ? "auto" : style.alignment === "left" ? "auto" : 0 }} />
 
           {/* Author */}
           {authorName && (
