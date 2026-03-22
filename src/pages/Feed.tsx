@@ -78,9 +78,9 @@ export default function Feed() {
           <BookOpen className="w-5 h-5" />
           <span className="font-display text-lg font-semibold">Atelier</span>
         </div>
-        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+        <button onClick={() => navigate("/profile")} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center active:scale-95 transition-transform">
           <span className="text-xs font-medium">C</span>
-        </div>
+        </button>
       </header>
 
       {/* Filter pills */}
