@@ -47,7 +47,7 @@ export default function OnboardingInterests() {
     <div className="min-h-screen flex flex-col bg-background">
       <OnboardingHeader />
 
-      <main className="flex-1 overflow-y-auto px-6 pt-4 pb-24">
+      <main className="flex-1 overflow-y-auto px-6 pt-4 pb-24 max-w-lg mx-auto w-full">
         <h1 className="font-display text-[2.5rem] leading-[1.05] font-bold italic text-balance animate-fade-up">
           What inspires<br />you?
         </h1>
@@ -62,7 +62,7 @@ export default function OnboardingInterests() {
               <button
                 key={topic}
                 onClick={() => toggle(topic)}
-                className={`px-5 py-3 rounded-full label-uppercase text-xs transition-all active:scale-[0.96] animate-fade-up ${
+                className={`px-5 py-3 rounded-full label-uppercase text-xs transition-all active:scale-[0.96] animate-fade-up min-h-[44px] ${
                   isSelected
                     ? "bg-primary text-primary-foreground"
                     : "bg-secondary text-secondary-foreground hover:bg-muted"
@@ -82,24 +82,26 @@ export default function OnboardingInterests() {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-6 py-4 border-t border-border bg-background">
-        <button
-          onClick={() => navigate("/onboarding/persona")}
-          className="flex items-center gap-2 text-muted-foreground label-uppercase text-xs"
-        >
-          <ArrowLeft className="w-4 h-4" /> Previous
-        </button>
-        <button
-          onClick={handleContinue}
-          disabled={selected.length < 3 || saving}
-          className={`flex items-center gap-2 px-6 py-3 rounded-sm label-uppercase text-xs transition-all active:scale-[0.97] ${
-            selected.length >= 3
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground cursor-not-allowed"
-          }`}
-        >
-          {saving ? "Saving…" : "Continue"} <ArrowRight className="w-4 h-4" />
-        </button>
+      <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-6 py-4 border-t border-border bg-background safe-bottom">
+        <div className="max-w-lg mx-auto w-full flex items-center justify-between">
+          <button
+            onClick={() => navigate("/onboarding/persona")}
+            className="flex items-center gap-2 text-muted-foreground label-uppercase text-xs min-h-[44px]"
+          >
+            <ArrowLeft className="w-4 h-4" /> Previous
+          </button>
+          <button
+            onClick={handleContinue}
+            disabled={selected.length < 3 || saving}
+            className={`flex items-center gap-2 px-6 py-3 rounded-sm label-uppercase text-xs transition-all active:scale-[0.97] min-h-[44px] ${
+              selected.length >= 3
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground cursor-not-allowed"
+            }`}
+          >
+            {saving ? "Saving…" : "Continue"} <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </footer>
     </div>
   );

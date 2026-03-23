@@ -14,15 +14,15 @@ export default function BottomNav() {
   const navigate = useNavigate();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border">
-      <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border safe-bottom">
+      <div className="flex items-center justify-around h-16 max-w-2xl mx-auto px-2">
         {tabs.map(({ icon: Icon, label, path }) => {
           const active = location.pathname === path || (path === "/feed" && location.pathname === "/");
           return (
             <button
               key={path}
               onClick={() => navigate(path)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 transition-colors ${
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 transition-colors min-w-[44px] min-h-[44px] justify-center ${
                 active ? "text-accent" : "text-muted-foreground"
               }`}
             >
