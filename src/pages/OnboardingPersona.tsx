@@ -42,7 +42,7 @@ export default function OnboardingPersona() {
     <div className="min-h-screen flex flex-col bg-background">
       <OnboardingHeader />
 
-      <main className="flex-1 overflow-y-auto px-6 pt-4 pb-24">
+      <main className="flex-1 overflow-y-auto px-6 pt-4 pb-24 max-w-lg mx-auto w-full">
         <h1 className="font-display text-[2.5rem] leading-[1.05] font-bold italic text-center text-balance animate-fade-up">
           How will you<br />contribute?
         </h1>
@@ -58,7 +58,7 @@ export default function OnboardingPersona() {
               <button
                 key={p.name}
                 onClick={() => setSelected(i)}
-                className={`w-full text-left p-6 rounded-sm transition-all animate-fade-up ${
+                className={`w-full text-left p-6 rounded-sm transition-all animate-fade-up min-h-[80px] ${
                   isSelected ? "bg-primary text-primary-foreground shadow-lg" : "bg-card hover:bg-secondary"
                 }`}
                 style={{ animationDelay: `${0.15 + i * 0.08}s` }}
@@ -75,19 +75,21 @@ export default function OnboardingPersona() {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-6 py-4 border-t border-border bg-background">
-        <button onClick={() => navigate("/onboarding")} className="flex items-center gap-2 text-muted-foreground label-uppercase text-xs">
-          <ArrowLeft className="w-4 h-4" /> Previous
-        </button>
-        <button
-          onClick={handleContinue}
-          disabled={selected === null || saving}
-          className={`flex items-center gap-2 px-6 py-3 rounded-sm label-uppercase text-xs transition-all active:scale-[0.97] ${
-            selected !== null ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground cursor-not-allowed"
-          }`}
-        >
-          {saving ? "Saving…" : "Continue"} <ArrowRight className="w-4 h-4" />
-        </button>
+      <footer className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-6 py-4 border-t border-border bg-background safe-bottom">
+        <div className="max-w-lg mx-auto w-full flex items-center justify-between">
+          <button onClick={() => navigate("/onboarding")} className="flex items-center gap-2 text-muted-foreground label-uppercase text-xs min-h-[44px]">
+            <ArrowLeft className="w-4 h-4" /> Previous
+          </button>
+          <button
+            onClick={handleContinue}
+            disabled={selected === null || saving}
+            className={`flex items-center gap-2 px-6 py-3 rounded-sm label-uppercase text-xs transition-all active:scale-[0.97] min-h-[44px] ${
+              selected !== null ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground cursor-not-allowed"
+            }`}
+          >
+            {saving ? "Saving…" : "Continue"} <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </footer>
     </div>
   );

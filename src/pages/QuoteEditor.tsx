@@ -25,9 +25,9 @@ export default function QuoteEditor() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Top bar */}
-      <header className="flex items-center justify-between px-5 py-4">
+      <header className="flex items-center justify-between px-5 py-4 max-w-2xl mx-auto w-full">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="text-foreground active:scale-95 transition-transform">
+          <button onClick={() => navigate(-1)} className="text-foreground active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center">
             <X className="w-5 h-5" />
           </button>
           <div>
@@ -38,30 +38,36 @@ export default function QuoteEditor() {
         <button
           disabled={!canPublish}
           onClick={() => navigate("/create/publish")}
-          className="bg-primary text-primary-foreground px-5 py-2 rounded-full label-uppercase text-xs active:scale-[0.97] transition-transform disabled:opacity-40"
+          className="bg-primary text-primary-foreground px-5 py-2 rounded-full label-uppercase text-xs active:scale-[0.97] transition-transform disabled:opacity-40 min-h-[44px]"
         >
           Publish
         </button>
       </header>
 
-      {/* Canvas */}
-      <QuoteCanvas
-        text={editor.text}
-        authorName={editor.authorName}
-        style={editor.style}
-        isDark={editor.isDark}
-        editable
-        onTextChange={editor.setText}
-      />
+      {/* Canvas — centered on desktop */}
+      <div className="flex-1 flex items-start justify-center md:py-8">
+        <div className="w-full max-w-lg">
+          <QuoteCanvas
+            text={editor.text}
+            authorName={editor.authorName}
+            style={editor.style}
+            isDark={editor.isDark}
+            editable
+            onTextChange={editor.setText}
+          />
+        </div>
+      </div>
 
       {/* Toolbar */}
-      <QuoteToolbar
-        activePanel={editor.activePanel}
-        setActivePanel={editor.setActivePanel}
-        style={editor.style}
-        updateStyle={editor.updateStyle}
-        charCount={editor.charCount}
-      />
+      <div className="max-w-2xl mx-auto w-full">
+        <QuoteToolbar
+          activePanel={editor.activePanel}
+          setActivePanel={editor.setActivePanel}
+          style={editor.style}
+          updateStyle={editor.updateStyle}
+          charCount={editor.charCount}
+        />
+      </div>
     </div>
   );
 }

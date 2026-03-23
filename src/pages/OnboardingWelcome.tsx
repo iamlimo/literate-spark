@@ -10,7 +10,7 @@ export default function OnboardingWelcome() {
     <div className="min-h-screen flex flex-col bg-background">
       <OnboardingHeader />
 
-      <main className="flex-1 flex flex-col px-6 pt-4">
+      <main className="flex-1 flex flex-col px-6 pt-4 max-w-lg mx-auto w-full">
         <div className="bg-card rounded-sm px-6 pt-10 pb-8 flex-1 flex flex-col">
           <p className="label-uppercase text-accent mb-3" style={{ animationDelay: "0.1s" }}>
             The Modern Archivist
@@ -27,7 +27,7 @@ export default function OnboardingWelcome() {
 
           <button
             onClick={() => navigate("/onboarding/persona")}
-            className="mt-8 inline-flex items-center gap-3 bg-primary text-primary-foreground px-7 py-4 rounded-sm label-uppercase text-sm hover:opacity-90 transition-opacity active:scale-[0.97] self-start animate-fade-up"
+            className="mt-8 inline-flex items-center gap-3 bg-primary text-primary-foreground px-7 py-4 rounded-sm label-uppercase text-sm hover:opacity-90 transition-opacity active:scale-[0.97] self-start animate-fade-up min-h-[48px]"
             style={{ animationDelay: "0.25s" }}
           >
             Begin Your Journey
@@ -55,13 +55,13 @@ export default function OnboardingWelcome() {
         </div>
       </main>
 
-      <footer className="flex items-center justify-between px-6 py-4 border-t border-border">
-        <button className="flex items-center gap-2 text-muted-foreground label-uppercase text-xs">
+      <footer className="flex items-center justify-between px-6 py-4 border-t border-border max-w-lg mx-auto w-full safe-bottom">
+        <button className="flex items-center gap-2 text-muted-foreground label-uppercase text-xs min-h-[44px]">
           <ArrowLeft className="w-4 h-4" /> Previous
         </button>
         <button
           onClick={() => navigate("/onboarding/persona")}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-sm label-uppercase text-xs active:scale-[0.97] transition-transform"
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-sm label-uppercase text-xs active:scale-[0.97] transition-transform min-h-[44px]"
         >
           Continue <ArrowRight className="w-4 h-4" />
         </button>
