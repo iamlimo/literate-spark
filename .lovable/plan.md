@@ -1,87 +1,35 @@
 
 
-## Quote Creation Feature — Implementation Plan
+## Capacitor Native Mobile App Setup
 
-### Overview
-Transform the static QuoteEditor into a fully interactive quote creation experience with real-time styling, publish flow, and database persistence. Add a floating "Create Quote" button on the Feed page.
+This plan adds Capacitor to the project so it can be built and run as a native iOS and Android app.
 
-### Architecture
+### What will be done
 
-```text
-Feed (FAB button) → QuoteEditor (Screen 1) → QuotePublish (Screen 2) → Feed
-                         ↓
-              useQuoteEditor (hook for state)
-              QuoteCanvas (preview component)
-              QuoteToolbar (bottom toolbar panels)
-```
+1. **Install Capacitor dependencies**: `@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`
+2. **Initialize Capacitor** with `npx cap init` using:
+   - App ID: `app.lovable.16c59af90ef4420eacc75bc748f27dca`
+   - App Name: `literate-spark`
+3. **Configure `capacitor.config.ts`** with live-reload server pointing to the sandbox preview URL for development
+4. **Add mobile-optimized meta tags** to `index.html` (status bar, safe areas)
 
-### Step 1: Database — Add style column to contents table
+### After setup — steps you'll need to do locally
 
-Migration to add a `style` JSONB column to `contents` for storing quote styling:
-```sql
-ALTER TABLE contents ADD COLUMN style jsonb DEFAULT '{}'::jsonb;
-```
+1. Export to GitHub via Settings → GitHub, then clone the repo
+2. Run `npm install`
+3. Add platforms: `npx cap add ios` and/or `npx cap add android`
+4. Run `npx cap update ios` / `npx cap update android`
+5. Run `npm run build && npx cap sync`
+6. Run `npx cap run ios` (requires Mac + Xcode) or `npx cap run android` (requires Android Studio)
 
-This stores `{ background, font, alignment, frame }` for quotes.
+After any future code changes, pull from GitHub and run `npx cap sync` to update the native projects.
 
-### Step 2: Create `useQuoteEditor` hook
+### Files changed
+- **package.json**: Add Capacitor dependencies
+- **capacitor.config.ts**: New — Capacitor configuration with live-reload
+- **index.html**: Add mobile meta tags (status bar style, Apple mobile web app capable)
 
-Central state management hook holding:
-- `text` (max 280 chars), `authorName`
-- `style`: background (solid colors/gradients), font (from curated list), alignment, frame style
-- `activeToolbar` panel (canvas/style/fonts/frame)
-- Auto-save to localStorage on changes
-- Composition number from user's quote count
-
-### Step 3: Rewrite `QuoteEditor.tsx` (Screen 1)
-
-Full-screen immersive editor:
-- **Top bar**: Close (X), "Digital Atelier" + composition number, Publish button
-- **Canvas**: Tappable centered textarea with auto-resize, quote mark decoration, author section with user's avatar/name from AuthContext
-- **Bottom toolbar** with 4 panels:
-  - **Canvas**: 8-10 background presets (solid colors + gradients, warm editorial palette)
-  - **Style**: Alignment toggle (left/center/right), bold/italic toggles
-  - **Fonts**: 6 curated fonts (Playfair Display, DM Sans, Lora, Merriweather, Cormorant Garamond, Space Mono)
-  - **Frame**: Border style options (none, thin, ornate)
-- Smooth panel transitions with animation
-- Character counter (280 max)
-
-### Step 4: Create `QuotePublishSettings.tsx` (Screen 2)
-
-Triggered by Publish button. Contains:
-- Styled quote preview card (read-only render of the canvas)
-- Caption textarea ("Capture your thoughts on this fragment...")
-- Tags input with chip UI and suggestions (#philosophy, #stoicism, etc.)
-- Club selector dropdown (fetches user's clubs from database)
-- Visibility toggle (public/private)
-- Publish button that inserts into `contents` table with `content_type: 'quote'`
-
-### Step 5: Create `QuoteCanvas` reusable component
-
-Shared between editor and preview. Renders the styled quote card with:
-- Background color/gradient
-- Font family, alignment, frame
-- Quote text, decorative marks, author info
-
-### Step 6: Add floating action button to Feed
-
-A `+` or quill icon FAB in the bottom-right corner (above BottomNav) that navigates to `/create`. Animated entrance with scale transition.
-
-### Step 7: Post-publish success flow
-
-After successful publish, show a brief success dialog with suggestions:
-- "Expand into an Article"
-- "Add to a Collection"
-- "Share externally"
-
-Then navigate back to Feed.
-
-### Step 8: Route for publish settings
-
-Add `/create/publish` route in App.tsx, protected.
-
-### Files Changed/Created
-- **New**: `src/hooks/useQuoteEditor.ts`, `src/components/quote/QuoteCanvas.tsx`, `src/components/quote/QuoteToolbar.tsx`, `src/pages/QuotePublishSettings.tsx`
-- **Modified**: `src/pages/QuoteEditor.tsx` (full rewrite), `src/pages/Feed.tsx` (add FAB), `src/App.tsx` (add route)
-- **Migration**: Add `style` JSONB column to `contents`
+### Technical details
+- The live-reload server URL (`https://16c59af9-0ef4-420e-acc7-5bc748f27dca.lovableproject.com?forceHideBadge=true`) lets you see changes instantly on a physical device during development
+- For production builds, remove the `server` block from `capacitor.config.ts` so the app uses the bundled assets
 
