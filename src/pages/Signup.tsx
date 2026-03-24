@@ -137,7 +137,7 @@ export default function Signup() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="archivist@atelier.com"
+                placeholder="writer@oeuvre.app"
                 required
                 className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 font-body"
               />

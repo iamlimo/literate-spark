@@ -31,7 +31,7 @@ export default function QuoteEditor() {
             <X className="w-5 h-5" />
           </button>
           <div>
-            <p className="font-display font-bold text-sm">Digital Atelier</p>
+            <p className="font-display font-bold text-sm">Oeuvre</p>
             <p className="label-uppercase text-[9px] text-muted-foreground">Composition</p>
           </div>
         </div>

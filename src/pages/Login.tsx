@@ -111,7 +111,7 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-primary text-primary-foreground py-4 rounded-sm label-uppercase text-sm mt-4 hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50 min-h-[48px]"
             >
-              {loading ? "Entering…" : "Enter The Atelier"}
+              {loading ? "Entering…" : "Enter Oeuvre"}
             </button>
           </form>
 

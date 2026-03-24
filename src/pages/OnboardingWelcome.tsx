@@ -18,7 +18,7 @@ export default function OnboardingWelcome() {
           <h1
             className="font-display text-[2.75rem] leading-[1.05] font-bold italic text-balance animate-fade-up"
           >
-            Welcome to<br />The Digital<br />Atelier
+            Welcome to<br />Oeuvre
           </h1>
 
           <p className="mt-6 text-base leading-relaxed text-muted-foreground max-w-[28ch] animate-fade-up" style={{ animationDelay: "0.15s" }}>
