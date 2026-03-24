@@ -35,25 +35,38 @@ export default function Signup() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (username.length < 3) {
+      toast({ title: "Username too short", description: "At least 3 characters.", variant: "destructive" });
+      return;
+    }
+    if (usernameStatus === "taken") {
+      toast({ title: "Username taken", description: "Choose a different username.", variant: "destructive" });
+      return;
+    }
     if (password.length < 8) {
       toast({ title: "Password too short", description: "Use at least 8 characters.", variant: "destructive" });
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: name },
+        data: { full_name: name, username },
         emailRedirectTo: window.location.origin,
       },
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
-    } else {
-      navigate("/onboarding");
+      return;
     }
+    // Update the profile with the chosen username
+    if (signUpData.user) {
+      await supabase.from("profiles").update({ username }).eq("user_id", signUpData.user.id);
+    }
+    setLoading(false);
+    navigate("/onboarding");
   };
 
   return (
