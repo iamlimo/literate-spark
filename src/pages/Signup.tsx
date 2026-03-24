@@ -10,9 +10,24 @@ export default function Signup() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "taken" | "available">("idle");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const checkUsername = async (value: string) => {
+    const clean = value.replace(/[^a-z0-9_]/gi, "").toLowerCase();
+    setUsername(clean);
+    if (clean.length < 3) { setUsernameStatus("idle"); return; }
+    setUsernameStatus("checking");
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("username", clean)
+      .maybeSingle();
+    setUsernameStatus(data ? "taken" : "available");
+  };
 
   const strength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
   const strengthLabel = ["", "Weak", "Good", "Strong"][strength];
@@ -20,25 +35,38 @@ export default function Signup() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (username.length < 3) {
+      toast({ title: "Username too short", description: "At least 3 characters.", variant: "destructive" });
+      return;
+    }
+    if (usernameStatus === "taken") {
+      toast({ title: "Username taken", description: "Choose a different username.", variant: "destructive" });
+      return;
+    }
     if (password.length < 8) {
       toast({ title: "Password too short", description: "Use at least 8 characters.", variant: "destructive" });
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: name },
+        data: { full_name: name, username },
         emailRedirectTo: window.location.origin,
       },
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
-    } else {
-      navigate("/onboarding");
+      return;
     }
+    // Update the profile with the chosen username
+    if (signUpData.user) {
+      await supabase.from("profiles").update({ username }).eq("user_id", signUpData.user.id);
+    }
+    setLoading(false);
+    navigate("/onboarding");
   };
 
   return (
@@ -81,6 +109,26 @@ export default function Signup() {
                 required
                 className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 font-body"
               />
+            </div>
+
+            <div>
+              <label className="label-uppercase text-xs block mb-2">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => checkUsername(e.target.value)}
+                placeholder="julian_barnes"
+                required
+                maxLength={30}
+                className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 font-body"
+              />
+              {username.length >= 3 && (
+                <p className={`text-[11px] mt-1.5 ${usernameStatus === "available" ? "text-green-600" : usernameStatus === "taken" ? "text-destructive" : "text-muted-foreground"}`}>
+                  {usernameStatus === "checking" && "Checking…"}
+                  {usernameStatus === "available" && "✓ Available"}
+                  {usernameStatus === "taken" && "✗ Already taken"}
+                </p>
+              )}
             </div>
 
             <div>

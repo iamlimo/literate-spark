@@ -9,14 +9,27 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    let loginEmail = identifier;
+    // If it's not an email, treat as username and look up the email
+    if (!identifier.includes("@")) {
+      const { data, error: fnError } = await supabase.rpc("get_email_by_username", { _username: identifier });
+      if (fnError || !data) {
+        setLoading(false);
+        toast({ title: "Login failed", description: "Username not found.", variant: "destructive" });
+        return;
+      }
+      loginEmail = data;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
     setLoading(false);
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
@@ -56,12 +69,12 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="label-uppercase text-xs block mb-2">Email Address</label>
+              <label className="label-uppercase text-xs block mb-2">Email or Username</label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="archivist@atelier.com"
+                type="text"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="archivist@atelier.com or julian_barnes"
                 required
                 className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 font-body"
               />
