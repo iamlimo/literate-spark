@@ -112,6 +112,26 @@ export default function Signup() {
             </div>
 
             <div>
+              <label className="label-uppercase text-xs block mb-2">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => checkUsername(e.target.value)}
+                placeholder="julian_barnes"
+                required
+                maxLength={30}
+                className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 font-body"
+              />
+              {username.length >= 3 && (
+                <p className={`text-[11px] mt-1.5 ${usernameStatus === "available" ? "text-green-600" : usernameStatus === "taken" ? "text-destructive" : "text-muted-foreground"}`}>
+                  {usernameStatus === "checking" && "Checking…"}
+                  {usernameStatus === "available" && "✓ Available"}
+                  {usernameStatus === "taken" && "✗ Already taken"}
+                </p>
+              )}
+            </div>
+
+            <div>
               <label className="label-uppercase text-xs block mb-2">Email Address</label>
               <input
                 type="email"
