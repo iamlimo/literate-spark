@@ -9,14 +9,27 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    let loginEmail = identifier;
+    // If it's not an email, treat as username and look up the email
+    if (!identifier.includes("@")) {
+      const { data, error: fnError } = await supabase.rpc("get_email_by_username", { _username: identifier });
+      if (fnError || !data) {
+        setLoading(false);
+        toast({ title: "Login failed", description: "Username not found.", variant: "destructive" });
+        return;
+      }
+      loginEmail = data;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
     setLoading(false);
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
