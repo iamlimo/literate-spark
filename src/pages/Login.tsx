@@ -57,7 +57,7 @@ export default function Login() {
         <div className="max-w-md mx-auto w-full animate-fade-up">
           <div className="flex items-center justify-center gap-2 mb-2">
             <BookOpen className="w-5 h-5" />
-            <span className="font-display italic text-lg">The Digital Atelier</span>
+            <span className="font-display italic text-lg">Oeuvre</span>
           </div>
 
           <h1 className="font-display text-4xl font-bold text-center mt-4 mb-2">
