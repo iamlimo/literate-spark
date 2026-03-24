@@ -10,9 +10,24 @@ export default function Signup() {
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "taken" | "available">("idle");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const checkUsername = async (value: string) => {
+    const clean = value.replace(/[^a-z0-9_]/gi, "").toLowerCase();
+    setUsername(clean);
+    if (clean.length < 3) { setUsernameStatus("idle"); return; }
+    setUsernameStatus("checking");
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("username", clean)
+      .maybeSingle();
+    setUsernameStatus(data ? "taken" : "available");
+  };
 
   const strength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
   const strengthLabel = ["", "Weak", "Good", "Strong"][strength];
