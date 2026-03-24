@@ -88,7 +88,7 @@ export default function Signup() {
         <div className="max-w-md mx-auto w-full animate-fade-up">
           <div className="flex items-center gap-2 mb-1">
             <BookOpen className="w-5 h-5" />
-            <span className="font-display italic text-base">The Digital Atelier</span>
+            <span className="font-display italic text-base">Oeuvre</span>
           </div>
 
           <h1 className="font-display text-3xl font-bold mt-2 mb-1">
