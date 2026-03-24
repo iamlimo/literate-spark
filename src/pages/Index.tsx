@@ -50,7 +50,7 @@ export default function Index() {
       <div className="hidden lg:flex lg:order-1 lg:w-1/2 lg:flex-col lg:justify-center lg:px-16 xl:px-24 lg:py-16">
         <div className="flex items-center gap-2 mb-8 animate-fade-up">
           <BookOpen className="w-6 h-6" />
-          <span className="font-display italic text-xl">The Digital Atelier</span>
+          <span className="font-display italic text-xl">Oeuvre</span>
         </div>
 
         <h1 className="font-display text-5xl xl:text-6xl leading-[1.05] font-bold text-balance animate-fade-up" style={{ animationDelay: "0.1s" }}>
