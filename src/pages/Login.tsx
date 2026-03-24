@@ -57,7 +57,7 @@ export default function Login() {
         <div className="max-w-md mx-auto w-full animate-fade-up">
           <div className="flex items-center justify-center gap-2 mb-2">
             <BookOpen className="w-5 h-5" />
-            <span className="font-display italic text-lg">The Digital Atelier</span>
+            <span className="font-display italic text-lg">Oeuvre</span>
           </div>
 
           <h1 className="font-display text-4xl font-bold text-center mt-4 mb-2">
@@ -74,7 +74,7 @@ export default function Login() {
                 type="text"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="archivist@atelier.com or julian_barnes"
+                placeholder="writer@oeuvre.app or julian_barnes"
                 required
                 className="w-full bg-transparent border-b border-border py-3 text-base focus:outline-none focus:border-foreground transition-colors placeholder:text-muted-foreground/50 font-body"
               />
@@ -111,7 +111,7 @@ export default function Login() {
               disabled={loading}
               className="w-full bg-primary text-primary-foreground py-4 rounded-sm label-uppercase text-sm mt-4 hover:opacity-90 transition-opacity active:scale-[0.98] disabled:opacity-50 min-h-[48px]"
             >
-              {loading ? "Entering…" : "Enter The Atelier"}
+              {loading ? "Entering…" : "Enter Oeuvre"}
             </button>
           </form>
 

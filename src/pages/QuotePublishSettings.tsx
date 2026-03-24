@@ -63,7 +63,7 @@ export default function QuotePublishSettings() {
         </div>
         <h2 className="font-display text-2xl font-bold mb-2 text-balance text-center">Published</h2>
         <p className="text-sm text-muted-foreground mb-8 text-center text-pretty">
-          Your fragment is now live in the Atelier.
+          Your fragment is now live on Oeuvre.
         </p>
         <div className="space-y-3 w-full max-w-xs">
           <button
