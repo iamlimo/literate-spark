@@ -1,85 +1,52 @@
 
 
-## Mobile-First Responsive Design Optimization
+## Social Features: Follow/Unfollow, User Search, Profile Viewing, Comments
 
-### Problem
-All pages are currently designed at a single mobile width with no responsive scaling. On desktop/tablet, content stretches edge-to-edge or looks cramped. There is no safe-area handling for native iOS (notch/home indicator). Touch targets and spacing need optimization for native mobile feel.
-
-### Approach
-Apply a responsive shell pattern: mobile-first base styles remain, desktop gets a centered container with max-width and optional sidebar layout for key pages. Add safe-area insets for Capacitor/native. Optimize touch targets, spacing, and typography scaling.
+### Overview
+Add four interconnected features: follow/unfollow on profiles, user search/discovery, clickable author names in the feed, and an inline comment system on feed posts.
 
 ### Changes
 
-#### 1. Global layout wrapper + safe area support (`src/index.css`)
-- Add `env(safe-area-inset-*)` padding to body for native iOS notch/home indicator
-- Add a `.app-shell` utility class that centers content with `max-w-2xl` on desktop for feed/profile/dashboard pages
-- Add desktop-specific adjustments: larger font sizes for headings, more generous spacing
+#### 1. Follow/Unfollow button on Profile page (`src/pages/Profile.tsx`)
+- Add state for `isFollowing` and follower/following counts
+- Fetch follow status on load: query `follows` table for current user → target user
+- Add Follow/Unfollow button next to the profile info (only shown when viewing another user's profile)
+- Toggle inserts/deletes from `follows` table with optimistic UI update
+- Display follower and following counts in the stats row
 
-#### 2. Create `AppShell` layout component (`src/components/AppShell.tsx`)
-- Wraps page content in a responsive container: full-width on mobile, centered `max-w-2xl` on tablet, two-column with sidebar on large desktop (`lg:max-w-6xl`)
-- Handles safe-area padding for top/bottom (Capacitor native)
-- Used by Feed, Profile, Dashboard, QuotePublishSettings
+#### 2. User search in Feed header (`src/pages/Feed.tsx`)
+- Add a Search icon button in the Feed header that opens a search dialog
+- Use the existing `Dialog` + `Command` components (already in the project) to build a search modal
+- Search queries the `profiles` table with `ilike` on `display_name` and `username`
+- Results show avatar, display name, username — clicking navigates to `/profile/:userId`
+- Debounced input (300ms) to avoid excessive queries
 
-#### 3. Update `BottomNav.tsx`
-- Add `pb-[env(safe-area-inset-bottom)]` for native iOS home indicator
-- On desktop (`md:` and up), hide bottom nav and show a top/side navigation instead, or keep it fixed but centered
+#### 3. Clickable author names in feed cards
+- Update `QuoteCard`, `ThoughtCard`, `StoryPreviewCard` to accept `authorId` prop
+- Wrap author name in a link/button that navigates to `/profile/:authorId`
+- Update `FeedItemRenderer` in `Feed.tsx` to pass `item.author_id` to each card
 
-#### 4. Update `Feed.tsx`
-- Wrap in `AppShell`
-- On desktop (`md:`): show a two-column layout with feed on left and a "Trending/Recommended" sidebar on right
-- FAB position adjusted for safe area: `bottom-[calc(5rem+env(safe-area-inset-bottom))]`
-
-#### 5. Update `Profile.tsx`
-- Wrap in `AppShell`
-- On desktop: wider profile card layout, stats in a horizontal row, content grid goes from 2 to 3 columns for quotes
-
-#### 6. Update `Dashboard.tsx`
-- Wrap in `AppShell`
-- Stats grid: `grid-cols-2` on mobile, `grid-cols-4` on desktop
-- Content list gets more horizontal space on desktop
-
-#### 7. Update `QuoteEditor.tsx`
-- On desktop: constrain canvas to centered `max-w-lg` with more vertical padding
-- Toolbar stays full-width bottom on mobile, constrained and centered on desktop
-
-#### 8. Update `QuotePublishSettings.tsx`
-- Wrap in `AppShell`
-- On desktop: two-column layout with preview on left, form on right
-
-#### 9. Update `Login.tsx` / `Signup.tsx`
-- Already centered with `max-w-md` — add desktop enhancements: split layout with decorative left panel on `lg:` screens showing the library image
-
-#### 10. Update `Index.tsx` (Landing)
-- On desktop: side-by-side hero layout (text left, image right) instead of stacked
-- Larger headline typography on `md:` screens
-
-#### 11. Update onboarding pages
-- Already centered — add `max-w-lg` constraint on desktop for persona cards
-- Footer nav: centered with max-width on desktop
-
-### Files created
-- `src/components/AppShell.tsx` — responsive layout wrapper
+#### 4. Inline comment system on feed posts
+- Add a comment sheet/drawer that opens when the comment button is tapped in `InteractionBar`
+- Uses existing `Sheet` component (side="bottom")
+- Fetches comments for the content from `comments` table joined with `profiles` for author info
+- Input field at bottom to post new comments
+- Comments display: avatar, name, timestamp, body
+- Pass `onComment` callback through from Feed → card components → InteractionBar
+- Manage comment state in Feed.tsx with a `selectedContentId` + sheet open state
 
 ### Files modified
-- `src/index.css` — safe-area CSS, desktop typography scale
-- `src/components/BottomNav.tsx` — safe area + desktop behavior
-- `src/pages/Feed.tsx` — responsive layout
-- `src/pages/Profile.tsx` — responsive layout
-- `src/pages/Dashboard.tsx` — responsive grid
-- `src/pages/QuoteEditor.tsx` — centered canvas on desktop
-- `src/pages/QuotePublishSettings.tsx` — two-column on desktop
-- `src/pages/Login.tsx` — split layout on desktop
-- `src/pages/Signup.tsx` — split layout on desktop
-- `src/pages/Index.tsx` — side-by-side hero on desktop
-- `src/pages/OnboardingPersona.tsx` — constrained width
-- `src/pages/OnboardingInterests.tsx` — constrained width
-- `src/pages/OnboardingWelcome.tsx` — constrained width
-- `src/pages/ProfileEdit.tsx` — constrained width
-- `src/components/quote/QuoteToolbar.tsx` — centered on desktop
+- `src/pages/Profile.tsx` — follow/unfollow button, follower/following counts
+- `src/pages/Feed.tsx` — search dialog, comment sheet, pass authorId + onComment to cards
+- `src/components/feed/QuoteCard.tsx` — add authorId prop, clickable author name
+- `src/components/feed/ThoughtCard.tsx` — add authorId prop, clickable author name
+- `src/components/feed/StoryPreviewCard.tsx` — add authorId prop, clickable author name
+- `src/components/feed/InteractionBar.tsx` — wire onComment prop (already exists but unused)
+- `src/hooks/useFeed.ts` — expose author_id in FeedItem (already there)
 
-### Technical details
-- Safe areas use `env(safe-area-inset-top)` etc., supported in Capacitor WebView
-- Responsive breakpoints follow Tailwind defaults: `sm:640px`, `md:768px`, `lg:1024px`
-- No new dependencies needed
-- All changes are additive — mobile layout is preserved as the base
+### No new files, components, or edge functions
+All features use existing UI components (`Dialog`, `Command`, `Sheet`, `Avatar`, `Input`) and existing database tables (`follows`, `comments`, `profiles`).
+
+### No database changes needed
+The `follows`, `comments`, and `profiles` tables already exist with appropriate RLS policies.
 
