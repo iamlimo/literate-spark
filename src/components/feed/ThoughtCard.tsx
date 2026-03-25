@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import InteractionBar from "./InteractionBar";
 
 interface ThoughtCardProps {
   id: string;
   title: string;
   body: string | null;
+  authorId: string;
   authorName: string;
   tags: string[];
   createdAt: string;
@@ -14,12 +16,14 @@ interface ThoughtCardProps {
   isSaved: boolean;
   onToggleLike: (liked: boolean) => void;
   onToggleSave: (saved: boolean) => void;
+  onComment?: () => void;
 }
 
 export default function ThoughtCard({
   id,
   title,
   body,
+  authorId,
   authorName,
   tags,
   createdAt,
@@ -30,11 +34,20 @@ export default function ThoughtCard({
   isSaved,
   onToggleLike,
   onToggleSave,
+  onComment,
 }: ThoughtCardProps) {
+  const navigate = useNavigate();
+
   return (
     <article className="animate-fade-up">
       <p className="label-uppercase text-[10px] text-muted-foreground mb-1.5">
-        Thought • {authorName}
+        Thought •{" "}
+        <button
+          onClick={() => navigate(`/profile/${authorId}`)}
+          className="hover:text-accent transition-colors"
+        >
+          {authorName}
+        </button>
       </p>
       <h3 className="font-display text-xl font-bold mb-2">{title}</h3>
       {body && (
@@ -58,6 +71,7 @@ export default function ThoughtCard({
         isSaved={isSaved}
         onToggleLike={onToggleLike}
         onToggleSave={onToggleSave}
+        onComment={onComment}
       />
     </article>
   );

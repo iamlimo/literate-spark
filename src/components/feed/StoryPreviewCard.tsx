@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import InteractionBar from "./InteractionBar";
 
 interface StoryPreviewCardProps {
@@ -6,6 +7,7 @@ interface StoryPreviewCardProps {
   body: string | null;
   contentType: string;
   coverImageUrl: string | null;
+  authorId: string;
   authorName: string;
   tags: string[];
   createdAt: string;
@@ -16,6 +18,7 @@ interface StoryPreviewCardProps {
   isSaved: boolean;
   onToggleLike: (liked: boolean) => void;
   onToggleSave: (saved: boolean) => void;
+  onComment?: () => void;
 }
 
 export default function StoryPreviewCard({
@@ -24,6 +27,7 @@ export default function StoryPreviewCard({
   body,
   contentType,
   coverImageUrl,
+  authorId,
   authorName,
   tags,
   createdAt,
@@ -34,7 +38,9 @@ export default function StoryPreviewCard({
   isSaved,
   onToggleLike,
   onToggleSave,
+  onComment,
 }: StoryPreviewCardProps) {
+  const navigate = useNavigate();
   const typeLabel = contentType.replace("_", " ");
 
   return (
@@ -45,7 +51,14 @@ export default function StoryPreviewCard({
         </div>
       )}
       <p className="label-uppercase text-[10px] text-muted-foreground mb-1.5">
-        {typeLabel} • {authorName} • {new Date(createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+        {typeLabel} •{" "}
+        <button
+          onClick={() => navigate(`/profile/${authorId}`)}
+          className="hover:text-accent transition-colors"
+        >
+          {authorName}
+        </button>
+        {" "}• {new Date(createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
       </p>
       <h3 className="font-display text-2xl font-bold leading-tight mb-2">{title}</h3>
       {body && (
@@ -69,6 +82,7 @@ export default function StoryPreviewCard({
         isSaved={isSaved}
         onToggleLike={onToggleLike}
         onToggleSave={onToggleSave}
+        onComment={onComment}
       />
     </article>
   );
