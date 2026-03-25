@@ -1,8 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import InteractionBar from "./InteractionBar";
 
 interface QuoteCardProps {
   id: string;
   body: string;
+  authorId: string;
   authorName: string;
   tags: string[];
   createdAt: string;
@@ -13,11 +15,13 @@ interface QuoteCardProps {
   isSaved: boolean;
   onToggleLike: (liked: boolean) => void;
   onToggleSave: (saved: boolean) => void;
+  onComment?: () => void;
 }
 
 export default function QuoteCard({
   id,
   body,
+  authorId,
   authorName,
   tags,
   createdAt,
@@ -28,7 +32,9 @@ export default function QuoteCard({
   isSaved,
   onToggleLike,
   onToggleSave,
+  onComment,
 }: QuoteCardProps) {
+  const navigate = useNavigate();
   const textSize = body.length > 200 ? "text-lg" : body.length > 100 ? "text-xl" : "text-2xl md:text-3xl";
 
   return (
@@ -40,7 +46,12 @@ export default function QuoteCard({
       </div>
       <div className="mt-3 flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium">{authorName}</p>
+          <button
+            onClick={() => navigate(`/profile/${authorId}`)}
+            className="text-sm font-medium hover:text-accent transition-colors text-left"
+          >
+            {authorName}
+          </button>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="label-uppercase text-[9px] text-muted-foreground">Quote</span>
             {tags.slice(0, 2).map((t) => (
@@ -61,6 +72,7 @@ export default function QuoteCard({
         isSaved={isSaved}
         onToggleLike={onToggleLike}
         onToggleSave={onToggleSave}
+        onComment={onComment}
       />
     </article>
   );

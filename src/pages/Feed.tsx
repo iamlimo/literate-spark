@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { BookOpen, Feather } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { BookOpen, Feather, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import AppShell from "@/components/AppShell";
 import QuoteCard from "@/components/feed/QuoteCard";
 import ThoughtCard from "@/components/feed/ThoughtCard";
 import StoryPreviewCard from "@/components/feed/StoryPreviewCard";
+import CommentSheet from "@/components/feed/CommentSheet";
+import UserSearchDialog from "@/components/feed/UserSearchDialog";
 import { useFeed, type FeedItem } from "@/hooks/useFeed";
 
 const QUOTE_TYPES = ["quote", "inspiration", "poem"];
@@ -40,16 +42,19 @@ function FeedItemRenderer({
   item,
   onToggleLike,
   onToggleSave,
+  onComment,
 }: {
   item: FeedItem;
   onToggleLike: (id: string, liked: boolean) => void;
   onToggleSave: (id: string, saved: boolean) => void;
+  onComment: (id: string) => void;
 }) {
   if (QUOTE_TYPES.includes(item.content_type)) {
     return (
       <QuoteCard
         id={item.id}
         body={item.body || item.title}
+        authorId={item.author_id}
         authorName={item.author_name}
         tags={item.tags}
         createdAt={item.created_at}
@@ -60,6 +65,7 @@ function FeedItemRenderer({
         isSaved={item.is_saved}
         onToggleLike={(liked) => onToggleLike(item.id, liked)}
         onToggleSave={(saved) => onToggleSave(item.id, saved)}
+        onComment={() => onComment(item.id)}
       />
     );
   }
@@ -70,6 +76,7 @@ function FeedItemRenderer({
         id={item.id}
         title={item.title}
         body={item.body}
+        authorId={item.author_id}
         authorName={item.author_name}
         tags={item.tags}
         createdAt={item.created_at}
@@ -80,6 +87,7 @@ function FeedItemRenderer({
         isSaved={item.is_saved}
         onToggleLike={(liked) => onToggleLike(item.id, liked)}
         onToggleSave={(saved) => onToggleSave(item.id, saved)}
+        onComment={() => onComment(item.id)}
       />
     );
   }
@@ -91,6 +99,7 @@ function FeedItemRenderer({
       body={item.body}
       contentType={item.content_type}
       coverImageUrl={item.cover_image_url}
+      authorId={item.author_id}
       authorName={item.author_name}
       tags={item.tags}
       createdAt={item.created_at}
@@ -101,6 +110,7 @@ function FeedItemRenderer({
       isSaved={item.is_saved}
       onToggleLike={(liked) => onToggleLike(item.id, liked)}
       onToggleSave={(saved) => onToggleSave(item.id, saved)}
+      onComment={() => onComment(item.id)}
     />
   );
 }
@@ -113,8 +123,14 @@ const tabLabels: { key: FeedTab; label: string }[] = [
 
 export default function Feed() {
   const [activeTab, setActiveTab] = useState<FeedTab>("foryou");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [commentContentId, setCommentContentId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { items, loading, toggleLike, toggleSave } = useFeed(activeTab);
+
+  const handleOpenComments = useCallback((contentId: string) => {
+    setCommentContentId(contentId);
+  }, []);
 
   return (
     <AppShell sidebar={<FeedSidebar />}>
@@ -125,12 +141,20 @@ export default function Feed() {
             <BookOpen className="w-5 h-5" />
             <span className="font-display text-lg font-semibold">Oeuvre</span>
           </div>
-          <button
-            onClick={() => navigate("/profile")}
-            className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]"
-          >
-            <span className="text-xs font-medium">C</span>
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="w-8 h-8 flex items-center justify-center min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => navigate("/profile")}
+              className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]"
+            >
+              <span className="text-xs font-medium">C</span>
+            </button>
+          </div>
         </header>
 
         {/* Feed tabs */}
@@ -178,6 +202,7 @@ export default function Feed() {
                   item={item}
                   onToggleLike={toggleLike}
                   onToggleSave={toggleSave}
+                  onComment={handleOpenComments}
                 />
               </div>
             ))
@@ -208,6 +233,9 @@ export default function Feed() {
 
         <BottomNav />
       </div>
+
+      <UserSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <CommentSheet contentId={commentContentId} onClose={() => setCommentContentId(null)} />
     </AppShell>
   );
 }

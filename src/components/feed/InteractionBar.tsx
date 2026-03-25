@@ -87,15 +87,13 @@ export default function InteractionBar({
           {savesCount > 0 && <span className="text-xs tabular-nums">{savesCount}</span>}
         </button>
 
-        {onComment && (
-          <button
-            onClick={onComment}
-            className="flex items-center gap-1.5 min-h-[44px] min-w-[44px] justify-center px-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <MessageSquare className="w-[18px] h-[18px]" />
-            {commentsCount > 0 && <span className="text-xs tabular-nums">{commentsCount}</span>}
-          </button>
-        )}
+        <button
+          onClick={onComment}
+          className="flex items-center gap-1.5 min-h-[44px] min-w-[44px] justify-center px-2 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <MessageSquare className="w-[18px] h-[18px]" />
+          {commentsCount > 0 && <span className="text-xs tabular-nums">{commentsCount}</span>}
+        </button>
       </div>
 
       <button className="min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">

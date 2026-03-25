@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Edit2, BookOpen, Heart, Eye } from "lucide-react";
+import { ArrowLeft, Calendar, Edit2, BookOpen, Heart, Eye, UserPlus, UserCheck, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BottomNav from "@/components/BottomNav";
 import AppShell from "@/components/AppShell";
 import QuoteCanvas from "@/components/quote/QuoteCanvas";
+import { toast } from "@/hooks/use-toast";
 
 interface ProfileData {
   id: string;
@@ -49,6 +50,10 @@ export default function Profile() {
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [stats, setStats] = useState({ works: 0, likes: 0, views: 0 });
   const [loading, setLoading] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   const targetUserId = userId || user?.id;
   const isOwnProfile = targetUserId === user?.id;
@@ -79,22 +84,53 @@ export default function Profile() {
 
       const totalViews = items.reduce((sum, c) => sum + (c.view_count || 0), 0);
 
-      const { count: likesCount } = await supabase
-        .from("likes")
-        .select("id", { count: "exact", head: true })
-        .in("content_id", items.map((c) => c.id));
+      const [
+        { count: likesCount },
+        { count: followers },
+        { count: following },
+      ] = await Promise.all([
+        supabase.from("likes").select("id", { count: "exact", head: true }).in("content_id", items.length > 0 ? items.map((c) => c.id) : ["00000000-0000-0000-0000-000000000000"]),
+        supabase.from("follows").select("id", { count: "exact", head: true }).eq("following_id", targetUserId),
+        supabase.from("follows").select("id", { count: "exact", head: true }).eq("follower_id", targetUserId),
+      ]);
 
-      setStats({
-        works: items.length,
-        likes: likesCount || 0,
-        views: totalViews,
-      });
+      setStats({ works: items.length, likes: likesCount || 0, views: totalViews });
+      setFollowerCount(followers || 0);
+      setFollowingCount(following || 0);
+
+      // Check if current user follows this profile
+      if (user && !isOwnProfile) {
+        const { data: followData } = await supabase
+          .from("follows")
+          .select("id")
+          .eq("follower_id", user.id)
+          .eq("following_id", targetUserId)
+          .maybeSingle();
+        setIsFollowing(!!followData);
+      }
 
       setLoading(false);
     };
 
     fetchProfile();
-  }, [targetUserId, isOwnProfile]);
+  }, [targetUserId, user, isOwnProfile]);
+
+  const handleFollowToggle = async () => {
+    if (!user || !targetUserId || isOwnProfile) return;
+    setFollowLoading(true);
+
+    if (isFollowing) {
+      await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", targetUserId);
+      setIsFollowing(false);
+      setFollowerCount((c) => Math.max(0, c - 1));
+    } else {
+      await supabase.from("follows").insert({ follower_id: user.id, following_id: targetUserId });
+      setIsFollowing(true);
+      setFollowerCount((c) => c + 1);
+      toast({ title: "Following", description: `You're now following ${profile?.display_name}` });
+    }
+    setFollowLoading(false);
+  };
 
   const initials = profile?.display_name
     ?.split(" ")
@@ -167,12 +203,25 @@ export default function Profile() {
                 </Badge>
               )}
             </div>
-            {isOwnProfile && (
+            {isOwnProfile ? (
               <button
                 onClick={() => navigate("/settings/profile")}
                 className="p-2 rounded-sm bg-secondary text-secondary-foreground active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <Edit2 className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={handleFollowToggle}
+                disabled={followLoading}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-medium min-h-[44px] transition-all active:scale-95 ${
+                  isFollowing
+                    ? "bg-secondary text-secondary-foreground"
+                    : "bg-primary text-primary-foreground"
+                }`}
+              >
+                {isFollowing ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                {isFollowing ? "Following" : "Follow"}
               </button>
             )}
           </div>
@@ -196,6 +245,8 @@ export default function Profile() {
               { icon: BookOpen, label: "Works", value: stats.works },
               { icon: Heart, label: "Likes", value: stats.likes },
               { icon: Eye, label: "Views", value: stats.views },
+              { icon: Users, label: "Followers", value: followerCount },
+              { icon: Users, label: "Following", value: followingCount },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="text-center">
                 <div className="flex items-center gap-1 justify-center">
