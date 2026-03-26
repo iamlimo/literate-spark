@@ -1,52 +1,55 @@
 
 
-## Social Features: Follow/Unfollow, User Search, Profile Viewing, Comments
+## Styled Quote Cards, Profile Interactions, Session Persistence, and Reflection UX
 
-### Overview
-Add four interconnected features: follow/unfollow on profiles, user search/discovery, clickable author names in the feed, and an inline comment system on feed posts.
+### Problem
+1. **QuoteCard in feed** renders plain text — ignores the `style` JSONB (background, font, frame, alignment) the user applied when creating the quote
+2. **Profile quotes tab** renders QuoteCanvas but has no interaction (like/save/comment)
+3. **Session lost on refresh** — the AuthContext doesn't persist sessions properly across page reloads (race condition between `getSession` and `onAuthStateChange`)
+4. **No "Reflection" feature** — saved/bookmarked quotes have no dedicated viewing experience
 
 ### Changes
 
-#### 1. Follow/Unfollow button on Profile page (`src/pages/Profile.tsx`)
-- Add state for `isFollowing` and follower/following counts
-- Fetch follow status on load: query `follows` table for current user → target user
-- Add Follow/Unfollow button next to the profile info (only shown when viewing another user's profile)
-- Toggle inserts/deletes from `follows` table with optimistic UI update
-- Display follower and following counts in the stats row
+#### 1. Add `style` to FeedItem and fetch it (`src/hooks/useFeed.ts`)
+- Add `style: Record<string, unknown> | null` to the `FeedItem` interface
+- Map `c.style` in the feed builder so it reaches QuoteCard
 
-#### 2. User search in Feed header (`src/pages/Feed.tsx`)
-- Add a Search icon button in the Feed header that opens a search dialog
-- Use the existing `Dialog` + `Command` components (already in the project) to build a search modal
-- Search queries the `profiles` table with `ilike` on `display_name` and `username`
-- Results show avatar, display name, username — clicking navigates to `/profile/:userId`
-- Debounced input (300ms) to avoid excessive queries
+#### 2. Rewrite QuoteCard to render styled cards (`src/components/feed/QuoteCard.tsx`)
+- Accept a `style` prop (optional, for backward compat)
+- When `style` exists with background/font/frame data, render a compact version of QuoteCanvas inline (background gradient, custom font, frame, alignment) instead of the plain text card
+- When no style, fall back to current plain typography card
+- Keep the author row and InteractionBar below the styled card
 
-#### 3. Clickable author names in feed cards
-- Update `QuoteCard`, `ThoughtCard`, `StoryPreviewCard` to accept `authorId` prop
-- Wrap author name in a link/button that navigates to `/profile/:authorId`
-- Update `FeedItemRenderer` in `Feed.tsx` to pass `item.author_id` to each card
+#### 3. Add interactions to Profile quotes tab (`src/pages/Profile.tsx`)
+- Fetch likes/saves/comments counts for the user's content
+- Fetch current user's like/save state for each quote
+- Render each quote with InteractionBar (like, save, comment)
+- Add a comment sheet (reuse existing CommentSheet) triggered from InteractionBar
+- Quotes displayed as styled cards (using the same compact QuoteCanvas rendering from the updated QuoteCard)
 
-#### 4. Inline comment system on feed posts
-- Add a comment sheet/drawer that opens when the comment button is tapped in `InteractionBar`
-- Uses existing `Sheet` component (side="bottom")
-- Fetches comments for the content from `comments` table joined with `profiles` for author info
-- Input field at bottom to post new comments
-- Comments display: avatar, name, timestamp, body
-- Pass `onComment` callback through from Feed → card components → InteractionBar
-- Manage comment state in Feed.tsx with a `selectedContentId` + sheet open state
+#### 4. Fix session persistence on refresh (`src/contexts/AuthContext.tsx`)
+- Reorder: set up `onAuthStateChange` listener first, then call `getSession` — ensuring the listener catches the INITIAL_SESSION event
+- Remove duplicate `setLoading(false)` call that can cause a flash of unauthenticated state
+
+#### 5. Add "Reflections" section to Feed (`src/pages/Feed.tsx`)
+- Below the feed content, add a "Reflections" section that shows the user's saved quotes
+- Fetch saved content IDs from `saves` table, then fetch matching quotes from `contents`
+- Display as a horizontally scrollable row of compact styled quote cards
+- Each card is tappable — opens a fullscreen overlay with the styled quote, author info, and interaction bar
+- Smooth entrance animation (fade-up + scale) when scrolling into view
+- Header: "Your Reflections" with a count badge and "See all" link
 
 ### Files modified
-- `src/pages/Profile.tsx` — follow/unfollow button, follower/following counts
-- `src/pages/Feed.tsx` — search dialog, comment sheet, pass authorId + onComment to cards
-- `src/components/feed/QuoteCard.tsx` — add authorId prop, clickable author name
-- `src/components/feed/ThoughtCard.tsx` — add authorId prop, clickable author name
-- `src/components/feed/StoryPreviewCard.tsx` — add authorId prop, clickable author name
-- `src/components/feed/InteractionBar.tsx` — wire onComment prop (already exists but unused)
-- `src/hooks/useFeed.ts` — expose author_id in FeedItem (already there)
+- `src/hooks/useFeed.ts` — add `style` to FeedItem
+- `src/components/feed/QuoteCard.tsx` — render styled background/font/frame when style data exists
+- `src/pages/Profile.tsx` — add InteractionBar + CommentSheet to quotes tab
+- `src/contexts/AuthContext.tsx` — fix session persistence on refresh
+- `src/pages/Feed.tsx` — add Reflections horizontal scroll section with saved quotes
 
-### No new files, components, or edge functions
-All features use existing UI components (`Dialog`, `Command`, `Sheet`, `Avatar`, `Input`) and existing database tables (`follows`, `comments`, `profiles`).
-
-### No database changes needed
-The `follows`, `comments`, and `profiles` tables already exist with appropriate RLS policies.
+### Technical details
+- QuoteCard compact rendering: aspect-ratio card with background gradient, ~200px height, text auto-sized, no editable textarea
+- Reflections carousel uses `overflow-x-auto snap-x snap-mandatory` with `snap-start` children for smooth native-feel horizontal scrolling
+- Fullscreen quote overlay uses a fixed-position div with backdrop blur and fade-in animation
+- No new components or edge functions created — all built within existing files
+- Session fix: the Supabase JS client emits `INITIAL_SESSION` through `onAuthStateChange`, so setting up the listener before `getSession` ensures no missed events
 
