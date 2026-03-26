@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Calendar, Edit2, BookOpen, Heart, Eye, UserPlus, UserCheck, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import BottomNav from "@/components/BottomNav";
 import AppShell from "@/components/AppShell";
-import QuoteCanvas from "@/components/quote/QuoteCanvas";
+import InteractionBar from "@/components/feed/InteractionBar";
+import CommentSheet from "@/components/feed/CommentSheet";
 import { toast } from "@/hooks/use-toast";
 
 interface ProfileData {
@@ -33,6 +34,11 @@ interface ContentItem {
   view_count: number | null;
   status: string;
   tags: string[] | null;
+  likes_count: number;
+  saves_count: number;
+  comments_count: number;
+  is_liked: boolean;
+  is_saved: boolean;
 }
 
 const personaLabels: Record<string, string> = {
@@ -40,6 +46,12 @@ const personaLabels: Record<string, string> = {
   scholar: "Scholar",
   curator: "Curator",
   artiste: "Artiste",
+};
+
+const frameClass: Record<string, string> = {
+  none: "",
+  thin: "border border-white/10",
+  ornate: "border-2 border-white/20",
 };
 
 export default function Profile() {
@@ -54,6 +66,7 @@ export default function Profile() {
   const [followLoading, setFollowLoading] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [commentContentId, setCommentContentId] = useState<string | null>(null);
 
   const targetUserId = userId || user?.id;
   const isOwnProfile = targetUserId === user?.id;
@@ -79,26 +92,65 @@ export default function Profile() {
         .eq("status", "published")
         .order("created_at", { ascending: false });
 
-      const items = (contentData || []) as ContentItem[];
-      setContents(items);
+      const rawItems = contentData || [];
+      const contentIds = rawItems.map((c) => c.id);
+      const totalViews = rawItems.reduce((sum, c) => sum + (c.view_count || 0), 0);
 
-      const totalViews = items.reduce((sum, c) => sum + (c.view_count || 0), 0);
-
+      // Parallel fetches for counts and user state
       const [
-        { count: likesCount },
+        { count: totalLikes },
         { count: followers },
         { count: following },
+        likesRes,
+        savesRes,
+        commentsRes,
+        userLikesRes,
+        userSavesRes,
       ] = await Promise.all([
-        supabase.from("likes").select("id", { count: "exact", head: true }).in("content_id", items.length > 0 ? items.map((c) => c.id) : ["00000000-0000-0000-0000-000000000000"]),
+        supabase.from("likes").select("id", { count: "exact", head: true }).in("content_id", contentIds.length > 0 ? contentIds : ["00000000-0000-0000-0000-000000000000"]),
         supabase.from("follows").select("id", { count: "exact", head: true }).eq("following_id", targetUserId),
         supabase.from("follows").select("id", { count: "exact", head: true }).eq("follower_id", targetUserId),
+        supabase.from("likes").select("content_id").in("content_id", contentIds.length > 0 ? contentIds : ["00000000-0000-0000-0000-000000000000"]),
+        supabase.from("saves").select("content_id").in("content_id", contentIds.length > 0 ? contentIds : ["00000000-0000-0000-0000-000000000000"]),
+        supabase.from("comments").select("content_id").in("content_id", contentIds.length > 0 ? contentIds : ["00000000-0000-0000-0000-000000000000"]),
+        user ? supabase.from("likes").select("content_id").eq("user_id", user.id).in("content_id", contentIds.length > 0 ? contentIds : ["00000000-0000-0000-0000-000000000000"]) : Promise.resolve({ data: [] }),
+        user ? supabase.from("saves").select("content_id").eq("user_id", user.id).in("content_id", contentIds.length > 0 ? contentIds : ["00000000-0000-0000-0000-000000000000"]) : Promise.resolve({ data: [] }),
       ]);
 
-      setStats({ works: items.length, likes: likesCount || 0, views: totalViews });
+      // Build count maps
+      const countBy = (arr: { content_id: string }[] | null) => {
+        const m = new Map<string, number>();
+        (arr || []).forEach((r) => m.set(r.content_id, (m.get(r.content_id) || 0) + 1));
+        return m;
+      };
+      const likesMap = countBy(likesRes.data);
+      const savesMap = countBy(savesRes.data);
+      const commentsMap = countBy(commentsRes.data);
+      const userLikedSet = new Set((userLikesRes.data || []).map((r) => r.content_id));
+      const userSavedSet = new Set((userSavesRes.data || []).map((r) => r.content_id));
+
+      const items: ContentItem[] = rawItems.map((c) => ({
+        id: c.id,
+        title: c.title,
+        body: c.body,
+        content_type: c.content_type,
+        style: (c.style as Record<string, unknown>) || null,
+        created_at: c.created_at,
+        view_count: c.view_count,
+        status: c.status,
+        tags: (c.tags || []) as string[],
+        likes_count: likesMap.get(c.id) || 0,
+        saves_count: savesMap.get(c.id) || 0,
+        comments_count: commentsMap.get(c.id) || 0,
+        is_liked: userLikedSet.has(c.id),
+        is_saved: userSavedSet.has(c.id),
+      }));
+
+      setContents(items);
+      setStats({ works: rawItems.length, likes: totalLikes || 0, views: totalViews });
       setFollowerCount(followers || 0);
       setFollowingCount(following || 0);
 
-      // Check if current user follows this profile
       if (user && !isOwnProfile) {
         const { data: followData } = await supabase
           .from("follows")
@@ -118,7 +170,6 @@ export default function Profile() {
   const handleFollowToggle = async () => {
     if (!user || !targetUserId || isOwnProfile) return;
     setFollowLoading(true);
-
     if (isFollowing) {
       await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", targetUserId);
       setIsFollowing(false);
@@ -131,6 +182,26 @@ export default function Profile() {
     }
     setFollowLoading(false);
   };
+
+  const toggleLike = useCallback((contentId: string, liked: boolean) => {
+    setContents((prev) =>
+      prev.map((item) =>
+        item.id === contentId
+          ? { ...item, is_liked: liked, likes_count: item.likes_count + (liked ? 1 : -1) }
+          : item
+      )
+    );
+  }, []);
+
+  const toggleSave = useCallback((contentId: string, saved: boolean) => {
+    setContents((prev) =>
+      prev.map((item) =>
+        item.id === contentId
+          ? { ...item, is_saved: saved, saves_count: item.saves_count + (saved ? 1 : -1) }
+          : item
+      )
+    );
+  }, []);
 
   const initials = profile?.display_name
     ?.split(" ")
@@ -151,12 +222,13 @@ export default function Profile() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-5">
         <p className="text-muted-foreground">Profile not found.</p>
-        <button onClick={() => navigate(-1)} className="text-accent label-uppercase text-xs">
-          Go back
-        </button>
+        <button onClick={() => navigate(-1)} className="text-accent label-uppercase text-xs">Go back</button>
       </div>
     );
   }
+
+  const quotes = contents.filter((c) => c.content_type === "quote");
+  const nonQuotes = contents.filter((c) => c.content_type !== "quote");
 
   return (
     <AppShell>
@@ -170,10 +242,7 @@ export default function Profile() {
             {profile.username ? `@${profile.username}` : "Profile"}
           </span>
           {isOwnProfile ? (
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="text-accent label-uppercase text-[10px] min-h-[44px] flex items-center"
-            >
+            <button onClick={() => navigate("/dashboard")} className="text-accent label-uppercase text-[10px] min-h-[44px] flex items-center">
               Dashboard
             </button>
           ) : (
@@ -186,17 +255,11 @@ export default function Profile() {
           <div className="flex items-start gap-4 mb-4">
             <Avatar className="w-16 h-16 md:w-20 md:h-20 ring-2 ring-border">
               <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="bg-secondary text-lg font-display font-bold">
-                {initials}
-              </AvatarFallback>
+              <AvatarFallback className="bg-secondary text-lg font-display font-bold">{initials}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h1 className="font-display text-xl md:text-2xl font-bold leading-tight truncate">
-                {profile.display_name}
-              </h1>
-              {profile.username && (
-                <p className="text-sm text-muted-foreground">@{profile.username}</p>
-              )}
+              <h1 className="font-display text-xl md:text-2xl font-bold leading-tight truncate">{profile.display_name}</h1>
+              {profile.username && <p className="text-sm text-muted-foreground">@{profile.username}</p>}
               {profile.persona && (
                 <Badge variant="secondary" className="mt-1 label-uppercase text-[9px]">
                   {personaLabels[profile.persona] || profile.persona}
@@ -204,10 +267,7 @@ export default function Profile() {
               )}
             </div>
             {isOwnProfile ? (
-              <button
-                onClick={() => navigate("/settings/profile")}
-                className="p-2 rounded-sm bg-secondary text-secondary-foreground active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center"
-              >
+              <button onClick={() => navigate("/settings/profile")} className="p-2 rounded-sm bg-secondary text-secondary-foreground active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center">
                 <Edit2 className="w-4 h-4" />
               </button>
             ) : (
@@ -215,9 +275,7 @@ export default function Profile() {
                 onClick={handleFollowToggle}
                 disabled={followLoading}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-medium min-h-[44px] transition-all active:scale-95 ${
-                  isFollowing
-                    ? "bg-secondary text-secondary-foreground"
-                    : "bg-primary text-primary-foreground"
+                  isFollowing ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground"
                 }`}
               >
                 {isFollowing ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
@@ -226,11 +284,7 @@ export default function Profile() {
             )}
           </div>
 
-          {profile.bio && (
-            <p className="text-sm text-muted-foreground leading-relaxed mb-4 text-pretty">
-              {profile.bio}
-            </p>
-          )}
+          {profile.bio && <p className="text-sm text-muted-foreground leading-relaxed mb-4 text-pretty">{profile.bio}</p>}
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
             <span className="flex items-center gap-1">
@@ -239,7 +293,6 @@ export default function Profile() {
             </span>
           </div>
 
-          {/* Stats */}
           <div className="flex items-center gap-6 md:gap-10">
             {[
               { icon: BookOpen, label: "Works", value: stats.works },
@@ -264,10 +317,7 @@ export default function Profile() {
           <section className="px-5 mb-6 animate-fade-up" style={{ animationDelay: "0.1s" }}>
             <div className="flex flex-wrap gap-1.5">
               {profile.interests.map((interest) => (
-                <span
-                  key={interest}
-                  className="bg-secondary text-secondary-foreground label-uppercase text-[9px] px-2.5 py-1 rounded-sm"
-                >
+                <span key={interest} className="bg-secondary text-secondary-foreground label-uppercase text-[9px] px-2.5 py-1 rounded-sm">
                   {interest}
                 </span>
               ))}
@@ -280,73 +330,101 @@ export default function Profile() {
         {/* Content tabs */}
         <Tabs defaultValue="published" className="px-5 mt-4 animate-fade-up" style={{ animationDelay: "0.15s" }}>
           <TabsList className="bg-secondary/50 w-full justify-start gap-0 p-0 h-auto">
-            <TabsTrigger
-              value="published"
-              className="label-uppercase text-[10px] rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5"
-            >
+            <TabsTrigger value="published" className="label-uppercase text-[10px] rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5">
               Published
             </TabsTrigger>
-            <TabsTrigger
-              value="quotes"
-              className="label-uppercase text-[10px] rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5"
-            >
+            <TabsTrigger value="quotes" className="label-uppercase text-[10px] rounded-none border-b-2 border-transparent data-[state=active]:border-accent data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5">
               Quotes
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="published" className="mt-4 space-y-4">
-            {contents.filter((c) => c.content_type !== "quote").length === 0 ? (
+            {nonQuotes.length === 0 ? (
               <div className="py-12 text-center">
                 <BookOpen className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">No published works yet.</p>
               </div>
             ) : (
-              contents
-                .filter((c) => c.content_type !== "quote")
-                .map((item) => (
-                  <article key={item.id} className="py-3">
-                    <p className="label-uppercase text-[10px] text-muted-foreground mb-1">
-                      {item.content_type.replace("_", " ")}
-                    </p>
-                    <h3 className="font-display text-lg font-bold mb-1">{item.title}</h3>
-                    {item.body && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">{item.body}</p>
-                    )}
-                    {item.tags && item.tags.length > 0 && (
-                      <div className="flex gap-1.5 mt-2">
-                        {item.tags.slice(0, 3).map((tag) => (
-                          <span key={tag} className="text-[10px] text-accent">#{tag}</span>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{item.view_count || 0}</span>
-                      <span>{new Date(item.created_at).toLocaleDateString()}</span>
+              nonQuotes.map((item) => (
+                <article key={item.id} className="py-3">
+                  <p className="label-uppercase text-[10px] text-muted-foreground mb-1">{item.content_type.replace("_", " ")}</p>
+                  <h3 className="font-display text-lg font-bold mb-1">{item.title}</h3>
+                  {item.body && <p className="text-sm text-muted-foreground line-clamp-2">{item.body}</p>}
+                  {item.tags && item.tags.length > 0 && (
+                    <div className="flex gap-1.5 mt-2">
+                      {item.tags.slice(0, 3).map((tag) => (
+                        <span key={tag} className="text-[10px] text-accent">#{tag}</span>
+                      ))}
                     </div>
-                  </article>
-                ))
+                  )}
+                  <InteractionBar
+                    contentId={item.id}
+                    likesCount={item.likes_count}
+                    savesCount={item.saves_count}
+                    commentsCount={item.comments_count}
+                    isLiked={item.is_liked}
+                    isSaved={item.is_saved}
+                    onToggleLike={(liked) => toggleLike(item.id, liked)}
+                    onToggleSave={(saved) => toggleSave(item.id, saved)}
+                    onComment={() => setCommentContentId(item.id)}
+                  />
+                </article>
+              ))
             )}
           </TabsContent>
 
           <TabsContent value="quotes" className="mt-4">
-            {contents.filter((c) => c.content_type === "quote").length === 0 ? (
+            {quotes.length === 0 ? (
               <div className="py-12 text-center">
                 <p className="text-sm text-muted-foreground">No quotes yet.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {contents
-                  .filter((c) => c.content_type === "quote")
-                  .map((item) => (
-                    <div key={item.id} className="rounded-sm overflow-hidden aspect-square">
-                      <QuoteCanvas
-                        text={item.body || item.title}
-                        authorName={profile.display_name}
-                        style={(item.style as any) || {}}
-                        compact
+              <div className="space-y-5">
+                {quotes.map((item) => {
+                  const s = item.style as { background?: string; font?: string; alignment?: string; frame?: string; bold?: boolean; italic?: boolean } | null;
+                  const hasStyle = s && s.background;
+                  const len = (item.body || item.title).length;
+                  const fontSize = len > 200 ? "text-sm" : len > 100 ? "text-base" : "text-lg";
+
+                  return (
+                    <article key={item.id} className="animate-fade-up">
+                      {hasStyle ? (
+                        <div
+                          className={`rounded-sm overflow-hidden ${frameClass[s.frame || "none"]}`}
+                          style={{ background: s.background }}
+                        >
+                          <div className="flex items-center justify-center min-h-[200px] p-5">
+                            <div
+                              className={`max-w-sm w-full p-5 rounded-sm ${s.alignment === "left" ? "text-left" : s.alignment === "right" ? "text-right" : "text-center"}`}
+                              style={{ backgroundColor: "rgba(0,0,0,0.15)", backdropFilter: "blur(8px)" }}
+                            >
+                              <p className="leading-none mb-2 opacity-30" style={{ fontFamily: s.font, fontSize: "1.8rem", color: "white" }}>❝</p>
+                              <p className={`leading-snug mb-3 ${fontSize} ${s.bold ? "font-bold" : "font-semibold"} ${s.italic ? "italic" : ""}`} style={{ fontFamily: s.font, color: "white" }}>
+                                {item.body || item.title}
+                              </p>
+                              <p className="text-xs opacity-60" style={{ fontFamily: s.font, color: "white" }}>{profile.display_name}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-card rounded-sm p-6">
+                          <p className="font-display text-xl font-semibold leading-snug text-center italic">"{item.body || item.title}"</p>
+                        </div>
+                      )}
+                      <InteractionBar
+                        contentId={item.id}
+                        likesCount={item.likes_count}
+                        savesCount={item.saves_count}
+                        commentsCount={item.comments_count}
+                        isLiked={item.is_liked}
+                        isSaved={item.is_saved}
+                        onToggleLike={(liked) => toggleLike(item.id, liked)}
+                        onToggleSave={(saved) => toggleSave(item.id, saved)}
+                        onComment={() => setCommentContentId(item.id)}
                       />
-                    </div>
-                  ))}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -354,6 +432,8 @@ export default function Profile() {
 
         <BottomNav />
       </div>
+
+      <CommentSheet contentId={commentContentId} onClose={() => setCommentContentId(null)} />
     </AppShell>
   );
 }

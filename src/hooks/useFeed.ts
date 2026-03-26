@@ -21,6 +21,7 @@ export interface FeedItem {
   is_liked: boolean;
   is_saved: boolean;
   score: number;
+  style: Record<string, unknown> | null;
 }
 
 type FeedTab = "foryou" | "following" | "clubs";
@@ -157,6 +158,7 @@ export function useFeed(tab: FeedTab) {
         is_liked: userLikedSet.has(c.id),
         is_saved: userSavedSet.has(c.id),
         score,
+        style: (c.style as Record<string, unknown>) || null,
       };
     });
 
