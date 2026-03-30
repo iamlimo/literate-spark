@@ -13,6 +13,7 @@ interface QuoteStyle {
 interface QuoteCardProps {
   id: string;
   body: string;
+  caption?: string | null;
   authorId: string;
   authorName: string;
   tags: string[];
@@ -46,6 +47,7 @@ export default function QuoteCard({
   commentsCount,
   isLiked,
   isSaved,
+  caption,
   style,
   onToggleLike,
   onToggleSave,
@@ -102,6 +104,10 @@ export default function QuoteCard({
             "{body}"
           </p>
         </div>
+      )}
+
+      {caption && (
+        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{caption}</p>
       )}
 
       <div className="mt-3 flex items-center justify-between">

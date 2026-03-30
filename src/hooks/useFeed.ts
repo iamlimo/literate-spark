@@ -6,9 +6,11 @@ export interface FeedItem {
   id: string;
   title: string;
   body: string | null;
+  caption: string | null;
   content_type: string;
   cover_image_url: string | null;
   tags: string[];
+  caption?: string | null;
   created_at: string;
   author_id: string;
   author_name: string;
@@ -143,6 +145,7 @@ export function useFeed(tab: FeedTab) {
         id: c.id,
         title: c.title,
         body: c.body,
+        caption: c.caption || null,
         content_type: c.content_type,
         cover_image_url: c.cover_image_url,
         tags,
@@ -158,6 +161,7 @@ export function useFeed(tab: FeedTab) {
         is_liked: userLikedSet.has(c.id),
         is_saved: userSavedSet.has(c.id),
         score,
+        caption: c.caption || null,
         style: (c.style as Record<string, unknown>) || null,
       };
     });

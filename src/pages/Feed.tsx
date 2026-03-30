@@ -21,6 +21,7 @@ type FeedTab = "foryou" | "following" | "clubs";
 interface SavedQuote {
   id: string;
   body: string | null;
+  caption: string | null;
   title: string;
   style: Record<string, unknown> | null;
   author_id: string;
@@ -71,6 +72,7 @@ function FeedItemRenderer({
       <QuoteCard
         id={item.id}
         body={item.body || item.title}
+        caption={item.caption}
         authorId={item.author_id}
         authorName={item.author_name}
         tags={item.tags}
@@ -190,6 +192,7 @@ export default function Feed() {
         contents.map((c) => ({
           id: c.id,
           body: c.body,
+          caption: (c as any).caption || null,
           title: c.title,
           style: (c.style as Record<string, unknown>) || null,
           author_id: c.author_id,
@@ -248,15 +251,15 @@ export default function Feed() {
         </div>
 
         {/* Reflections carousel */}
-        {savedQuotes.length > 0 && (
-          <section className="mb-6 animate-fade-up">
+      {/* {savedQuotes.length > 0 && (
+         <section className="mb-6 animate-fade-up">
             <div className="flex items-center justify-between px-5 mb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-accent" />
                 <span className="label-uppercase text-[10px] font-medium">Your Reflections</span>
                 <span className="bg-accent/10 text-accent text-[9px] px-1.5 py-0.5 rounded-full tabular-nums">{savedQuotes.length}</span>
               </div>
-            </div>
+            </div> 
             <div className="flex gap-3 px-5 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2">
               {savedQuotes.map((q, idx) => {
                 const s = q.style as { background?: string; font?: string; alignment?: string; frame?: string; bold?: boolean; italic?: boolean } | null;
@@ -290,6 +293,7 @@ export default function Feed() {
             </div>
           </section>
         )}
+         */}  
 
         {/* Feed content */}
         <div className="px-5 space-y-6">
@@ -405,6 +409,9 @@ export default function Feed() {
                       <p className={`font-display ${fontSize} font-semibold leading-snug text-center italic`}>"{text}"</p>
                       <p className="text-sm text-muted-foreground text-center mt-4">— {q.author_name}</p>
                     </div>
+                  )}
+                  {q.caption && (
+                    <p className="text-sm text-muted-foreground text-center mt-3">{q.caption}</p>
                   )}
                   <InteractionBar
                     contentId={q.id}

@@ -28,6 +28,7 @@ interface ContentItem {
   id: string;
   title: string;
   body: string | null;
+  caption?: string | null;
   content_type: string;
   style: Record<string, unknown> | null;
   created_at: string;
@@ -133,6 +134,7 @@ export default function Profile() {
         id: c.id,
         title: c.title,
         body: c.body,
+        caption: (c as any).caption || null,
         content_type: c.content_type,
         style: (c.style as Record<string, unknown>) || null,
         created_at: c.created_at,
