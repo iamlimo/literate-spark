@@ -160,7 +160,6 @@ export function useFeed(tab: FeedTab) {
         is_liked: userLikedSet.has(c.id),
         is_saved: userSavedSet.has(c.id),
         score,
-        caption: c.caption || null,
         style: (c.style as Record<string, unknown>) || null,
       };
     });

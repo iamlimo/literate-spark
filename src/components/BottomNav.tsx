@@ -2,7 +2,7 @@ import { Home, PenTool, Library, Users, GraduationCap } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const tabs = [
-  { icon: BookOpen, label: "Novel", path: "/feed" },
+  { icon: Home, label: "Home", path: "/feed" },
   { icon: PenTool, label: "Create", path: "/create" },
   { icon: Library, label: "Market", path: "/bookstore" },
   { icon: Users, label: "Clubs", path: "/clubs" },
