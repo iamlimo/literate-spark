@@ -10,7 +10,6 @@ export interface FeedItem {
   content_type: string;
   cover_image_url: string | null;
   tags: string[];
-  caption?: string | null;
   created_at: string;
   author_id: string;
   author_name: string;
@@ -161,7 +160,6 @@ export function useFeed(tab: FeedTab) {
         is_liked: userLikedSet.has(c.id),
         is_saved: userSavedSet.has(c.id),
         score,
-        caption: c.caption || null,
         style: (c.style as Record<string, unknown>) || null,
       };
     });

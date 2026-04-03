@@ -13,8 +13,11 @@ import OnboardingWelcome from "./pages/OnboardingWelcome";
 import OnboardingPersona from "./pages/OnboardingPersona";
 import OnboardingInterests from "./pages/OnboardingInterests";
 import Feed from "./pages/Feed";
+import CreatePicker from "./pages/CreatePicker";
 import QuoteEditor from "./pages/QuoteEditor";
 import QuotePublishSettings from "./pages/QuotePublishSettings";
+import ContentEditor from "./pages/ContentEditor";
+import ContentPublishSettings from "./pages/ContentPublishSettings";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -36,8 +39,11 @@ const App = () => (
             <Route path="/onboarding/persona" element={<OnboardingPersona />} />
             <Route path="/onboarding/interests" element={<OnboardingInterests />} />
             <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
-            <Route path="/create" element={<ProtectedRoute><QuoteEditor /></ProtectedRoute>} />
-            <Route path="/create/publish" element={<ProtectedRoute><QuotePublishSettings /></ProtectedRoute>} />
+            <Route path="/create" element={<ProtectedRoute><CreatePicker /></ProtectedRoute>} />
+            <Route path="/create/quote" element={<ProtectedRoute><QuoteEditor /></ProtectedRoute>} />
+            <Route path="/create/quote/publish" element={<ProtectedRoute><QuotePublishSettings /></ProtectedRoute>} />
+            <Route path="/create/:type" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
+            <Route path="/create/:type/publish" element={<ProtectedRoute><ContentPublishSettings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

@@ -98,7 +98,7 @@ export default function QuotePublishSettings() {
     <div className="min-h-screen bg-background">
       {/* Top bar */}
       <header className="flex items-center justify-between px-5 py-4 sticky top-0 z-40 bg-background/95 backdrop-blur-sm max-w-2xl mx-auto">
-        <button onClick={() => navigate("/create")} className="text-foreground active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center">
+        <button onClick={() => navigate("/create/quote")} className="text-foreground active:scale-95 transition-transform min-h-[44px] min-w-[44px] flex items-center justify-center">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <span className="font-display font-bold text-sm">Publish Quote</span>

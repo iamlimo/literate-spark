@@ -43,7 +43,7 @@ export default function QuoteEditor() {
         <button
           type="button" // Added type attribute
           disabled={!canPublish}
-          onClick={() => navigate("/create/publish")}
+          onClick={() => navigate("/create/quote/publish")}
           className="bg-primary text-primary-foreground px-5 py-2 rounded-full label-uppercase text-xs active:scale-[0.97] transition-transform disabled:opacity-40 min-h-[44px]"
         >
           Publish
