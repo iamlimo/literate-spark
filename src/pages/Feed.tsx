@@ -13,8 +13,8 @@ import UserSearchDialog from "@/components/feed/UserSearchDialog";
 import InteractionBar from "@/components/feed/InteractionBar";
 import { useFeed, type FeedItem } from "@/hooks/useFeed";
 
-const QUOTE_TYPES = ["quote", "inspiration", "poem"];
-const THOUGHT_TYPES = ["short_story"];
+const QUOTE_TYPES = ["quote", "inspiration"];
+const THOUGHT_TYPES = ["short_story", "poem"];
 
 type FeedTab = "foryou" | "following" | "clubs";
 
