@@ -39,6 +39,7 @@ export default function QuotePublishSettings() {
         author_id: user.id,
         title: editor.text.slice(0, 60),
         body: editor.text,
+        caption: caption || null,
         content_type: "quote",
         status: visibility === "public" ? "published" : "draft",
         tags,
@@ -47,6 +48,7 @@ export default function QuotePublishSettings() {
 
       if (error) throw error;
       editor.clearDraft();
+      setCaption("");
       setPublished(true);
     } catch (err: any) {
       toast({ title: "Publish failed", description: err.message, variant: "destructive" });
