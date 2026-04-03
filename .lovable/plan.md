@@ -1,55 +1,73 @@
 
 
-## Styled Quote Cards, Profile Interactions, Session Persistence, and Reflection UX
+## Multi-Content Creation System + Navigation + Build Fix
 
-### Problem
-1. **QuoteCard in feed** renders plain text — ignores the `style` JSONB (background, font, frame, alignment) the user applied when creating the quote
-2. **Profile quotes tab** renders QuoteCanvas but has no interaction (like/save/comment)
-3. **Session lost on refresh** — the AuthContext doesn't persist sessions properly across page reloads (race condition between `getSession` and `onAuthStateChange`)
-4. **No "Reflection" feature** — saved/bookmarked quotes have no dedicated viewing experience
+### Overview
+Expand the creation flow beyond quotes to support Articles, Stories, Books (multi-chapter), and Poems. Add a content type picker on `/create`, update navigation labels, and fix the existing build error.
 
 ### Changes
 
-#### 1. Add `style` to FeedItem and fetch it (`src/hooks/useFeed.ts`)
-- Add `style: Record<string, unknown> | null` to the `FeedItem` interface
-- Map `c.style` in the feed builder so it reaches QuoteCard
+#### 1. Fix build error in `src/hooks/useFeed.ts`
+- Remove duplicate `caption` property on lines 9 and 13 of the `FeedItem` interface (keep one)
+- Remove duplicate `caption` mapping on line 148/164 in the feed builder
 
-#### 2. Rewrite QuoteCard to render styled cards (`src/components/feed/QuoteCard.tsx`)
-- Accept a `style` prop (optional, for backward compat)
-- When `style` exists with background/font/frame data, render a compact version of QuoteCanvas inline (background gradient, custom font, frame, alignment) instead of the plain text card
-- When no style, fall back to current plain typography card
-- Keep the author row and InteractionBar below the styled card
+#### 2. Update BottomNav labels (`src/components/BottomNav.tsx`)
+- Change "Novel" → "Home" (keep BookOpen icon or switch to Home icon)
+- Keep "Create", "Market", "Clubs", "Library" as-is
 
-#### 3. Add interactions to Profile quotes tab (`src/pages/Profile.tsx`)
-- Fetch likes/saves/comments counts for the user's content
-- Fetch current user's like/save state for each quote
-- Render each quote with InteractionBar (like, save, comment)
-- Add a comment sheet (reuse existing CommentSheet) triggered from InteractionBar
-- Quotes displayed as styled cards (using the same compact QuoteCanvas rendering from the updated QuoteCard)
+#### 3. Create content type picker page (`src/pages/CreatePicker.tsx`)
+- New page at `/create` showing a grid of content types the user can create:
+  - **Quote** — "A short-form visual fragment" → navigates to `/create/quote`
+  - **Article** — "Share your thoughts and ideas" → navigates to `/create/article`
+  - **Story** — "A short story or narrative" → navigates to `/create/story`
+  - **Book** — "A multi-chapter work" → navigates to `/create/book`
+  - **Poem** — "Express through verse" → navigates to `/create/poem`
+- Each option is a card with icon, title, and description
+- Clean, minimal editorial design matching existing aesthetic
+- Keep the FAB on feed pointing to `/create`
 
-#### 4. Fix session persistence on refresh (`src/contexts/AuthContext.tsx`)
-- Reorder: set up `onAuthStateChange` listener first, then call `getSession` — ensuring the listener catches the INITIAL_SESSION event
-- Remove duplicate `setLoading(false)` call that can cause a flash of unauthenticated state
+#### 4. Create unified long-form editor (`src/pages/ContentEditor.tsx`)
+- A single editor page that handles articles, stories, poems, and books
+- Receives content type from route param or state
+- Fields: title, body (textarea/rich text area), cover image URL (optional), tags
+- For **books**: additional "chapter" concept — user can add multiple chapters (title + body each), stored as JSON in the `body` field or as separate content entries (MVP: store chapters as a JSON array in body)
+- For **poems**: similar to article but with poem-specific styling hints
+- Top bar: back button, content type label, "Publish" button
+- Publish navigates to a unified publish settings page
 
-#### 5. Add "Reflections" section to Feed (`src/pages/Feed.tsx`)
-- Below the feed content, add a "Reflections" section that shows the user's saved quotes
-- Fetch saved content IDs from `saves` table, then fetch matching quotes from `contents`
-- Display as a horizontally scrollable row of compact styled quote cards
-- Each card is tappable — opens a fullscreen overlay with the styled quote, author info, and interaction bar
-- Smooth entrance animation (fade-up + scale) when scrolling into view
-- Header: "Your Reflections" with a count badge and "See all" link
+#### 5. Create unified publish settings (`src/pages/ContentPublishSettings.tsx`)
+- Similar to QuotePublishSettings but for all non-quote types
+- Shows: title preview, caption/description input, tags, visibility toggle
+- On publish: inserts into `contents` table with the correct `content_type`
+- Success screen with same post-publish actions
+
+#### 6. Update routes (`src/App.tsx`)
+- `/create` → `CreatePicker`
+- `/create/quote` → existing `QuoteEditor`
+- `/create/quote/publish` → existing `QuotePublishSettings`
+- `/create/:type` → `ContentEditor` (for article, story, book, poem)
+- `/create/:type/publish` → `ContentPublishSettings`
+
+#### 7. Update Feed rendering (`src/pages/Feed.tsx`)
+- Add "article", "poem" to recognized content types in `FeedItemRenderer`
+- Articles and books render via `StoryPreviewCard`
+- Poems render via `QuoteCard` (typography-first) or a dedicated poem variant
+
+#### 8. Update `QuotePublishSettings.tsx`
+- Fix navigation: back button goes to `/create/quote` instead of `/create`
+
+### Files created
+- `src/pages/CreatePicker.tsx` — content type selection grid
+- `src/pages/ContentEditor.tsx` — unified long-form editor
+- `src/pages/ContentPublishSettings.tsx` — unified publish settings
 
 ### Files modified
-- `src/hooks/useFeed.ts` — add `style` to FeedItem
-- `src/components/feed/QuoteCard.tsx` — render styled background/font/frame when style data exists
-- `src/pages/Profile.tsx` — add InteractionBar + CommentSheet to quotes tab
-- `src/contexts/AuthContext.tsx` — fix session persistence on refresh
-- `src/pages/Feed.tsx` — add Reflections horizontal scroll section with saved quotes
+- `src/hooks/useFeed.ts` — fix duplicate caption property
+- `src/components/BottomNav.tsx` — "Novel" → "Home"
+- `src/App.tsx` — add new routes
+- `src/pages/Feed.tsx` — handle new content types in renderer
+- `src/pages/QuotePublishSettings.tsx` — fix back navigation
 
-### Technical details
-- QuoteCard compact rendering: aspect-ratio card with background gradient, ~200px height, text auto-sized, no editable textarea
-- Reflections carousel uses `overflow-x-auto snap-x snap-mandatory` with `snap-start` children for smooth native-feel horizontal scrolling
-- Fullscreen quote overlay uses a fixed-position div with backdrop blur and fade-in animation
-- No new components or edge functions created — all built within existing files
-- Session fix: the Supabase JS client emits `INITIAL_SESSION` through `onAuthStateChange`, so setting up the listener before `getSession` ensures no missed events
+### No database changes needed
+The `content_type` enum already includes article, short_story, novel (for books), poem, and all future types (comic, research_paper, thesis, journal). No migration required.
 
