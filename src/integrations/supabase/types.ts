@@ -174,6 +174,7 @@ export type Database = {
         Row: {
           author_id: string
           body: string | null
+          caption: string | null
           content_type: Database["public"]["Enums"]["content_type"]
           cover_image_url: string | null
           created_at: string
@@ -190,6 +191,7 @@ export type Database = {
         Insert: {
           author_id: string
           body?: string | null
+          caption?: string | null
           content_type: Database["public"]["Enums"]["content_type"]
           cover_image_url?: string | null
           created_at?: string
@@ -206,6 +208,7 @@ export type Database = {
         Update: {
           author_id?: string
           body?: string | null
+          caption?: string | null
           content_type?: Database["public"]["Enums"]["content_type"]
           cover_image_url?: string | null
           created_at?: string
