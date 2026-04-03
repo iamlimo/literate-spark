@@ -10,7 +10,6 @@ export interface FeedItem {
   content_type: string;
   cover_image_url: string | null;
   tags: string[];
-  caption?: string | null;
   created_at: string;
   author_id: string;
   author_name: string;
