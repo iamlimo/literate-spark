@@ -1,4 +1,4 @@
-import { BookOpen, PenTool, Library, Users, GraduationCap } from "lucide-react";
+import { Home, PenTool, Library, Users, GraduationCap } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const tabs = [
