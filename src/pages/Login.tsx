@@ -9,15 +9,15 @@ import libraryImg from "@/assets/library-interior.jpg";
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, loading } = useAuth();
-
-  if (!loading && user) {
-    return <Navigate to="/feed" replace />;
-  }
+  const { user, loading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (!authLoading && user) {
+    return <Navigate to="/feed" replace />;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

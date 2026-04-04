@@ -9,11 +9,7 @@ import libraryImg from "@/assets/library-interior.jpg";
 export default function Signup() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, loading } = useAuth();
-
-  if (!loading && user) {
-    return <Navigate to="/feed" replace />;
-  }
+  const { user, loading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -21,6 +17,10 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (!authLoading && user) {
+    return <Navigate to="/feed" replace />;
+  }
 
   const checkUsername = async (value: string) => {
     const clean = value.replace(/[^a-z0-9_]/gi, "").toLowerCase();
