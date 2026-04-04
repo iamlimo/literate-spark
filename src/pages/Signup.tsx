@@ -1,13 +1,19 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { BookOpen, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import libraryImg from "@/assets/library-interior.jpg";
 
 export default function Signup() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
+
+  if (!loading && user) {
+    return <Navigate to="/feed" replace />;
+  }
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
