@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { ArrowLeft, Lock, Globe, Check, Sparkles, BookOpen, Share2 } from "lucide-react";
+import { ArrowLeft, Lock, Globe, Check, BookOpen, Share2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const TAG_SUGGESTIONS = ["philosophy", "fiction", "poetry", "science", "history", "politics", "technology", "memoir"];
+const CAPTION_MAX = 280;
+
+function wordCount(text: string) {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
 
 export default function ContentPublishSettings() {
   const navigate = useNavigate();
@@ -30,6 +35,9 @@ export default function ContentPublishSettings() {
   };
 
   const removeTag = (tag: string) => setTags((prev) => prev.filter((t) => t !== tag));
+
+  const bodyWordCount = body ? wordCount(body) : 0;
+  const readTime = Math.max(1, Math.ceil(bodyWordCount / 200));
 
   const handlePublish = async () => {
     if (!user || !title?.trim()) return;
@@ -92,6 +100,11 @@ export default function ContentPublishSettings() {
 
   const typeLabel = contentType === "short_story" ? "Story" : contentType === "novel" ? "Book" : contentType.charAt(0).toUpperCase() + contentType.slice(1);
 
+  // Get first 3 lines of body for preview
+  const bodyPreview = body
+    ? body.split("\n").filter(Boolean).slice(0, 3).join("\n")
+    : "";
+
   return (
     <div className="min-h-screen bg-background">
       <header className="flex items-center justify-between px-5 py-4 sticky top-0 z-40 bg-background/95 backdrop-blur-sm max-w-2xl mx-auto">
@@ -109,19 +122,29 @@ export default function ContentPublishSettings() {
       </header>
 
       <div className="max-w-2xl mx-auto px-5 pb-12 space-y-6">
-        {/* Title preview */}
+        {/* Title preview with read time */}
         <div className="bg-card border border-border rounded-sm p-5">
-          <p className="label-uppercase text-[10px] text-muted-foreground mb-1">{typeLabel}</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="label-uppercase text-[10px] text-muted-foreground">{typeLabel}</p>
+            <p className="text-[10px] text-muted-foreground">{readTime} min read · {bodyWordCount} words</p>
+          </div>
           <h2 className="font-display text-xl font-bold">{title}</h2>
-          {body && <p className="text-sm text-muted-foreground mt-2 line-clamp-3">{body.slice(0, 200)}</p>}
+          {bodyPreview && (
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed whitespace-pre-line line-clamp-3">
+              {bodyPreview}
+            </p>
+          )}
         </div>
 
-        {/* Caption */}
+        {/* Caption / Description */}
         <div>
-          <label className="label-uppercase text-[10px] text-muted-foreground mb-2 block">Description</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="label-uppercase text-[10px] text-muted-foreground">Description</label>
+            <span className="text-[10px] text-muted-foreground">{caption.length}/{CAPTION_MAX}</span>
+          </div>
           <textarea
             value={caption}
-            onChange={(e) => setCaption(e.target.value)}
+            onChange={(e) => setCaption(e.target.value.slice(0, CAPTION_MAX))}
             placeholder="Add a short description..."
             className="w-full bg-secondary rounded-sm p-4 text-sm outline-none resize-none min-h-[80px] placeholder:text-muted-foreground/50"
             rows={3}
