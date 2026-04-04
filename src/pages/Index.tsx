@@ -1,9 +1,26 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { BookOpen, ArrowRight } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import libraryImg from "@/assets/library-interior.jpg";
 
 export default function Index() {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex items-center gap-2 animate-pulse">
+          <BookOpen className="w-6 h-6" />
+          <span className="font-display italic text-xl">Oeuvre</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/feed" replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background lg:flex-row">

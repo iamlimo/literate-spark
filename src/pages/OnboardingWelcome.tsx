@@ -1,10 +1,17 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import OnboardingHeader from "@/components/OnboardingHeader";
+import { useAuth } from "@/contexts/AuthContext";
 import libraryImg from "@/assets/library-interior.jpg";
 
 export default function OnboardingWelcome() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // If no user, redirect to signup
+  if (!user) {
+    return <Navigate to="/signup" replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
