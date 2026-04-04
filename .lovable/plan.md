@@ -1,73 +1,54 @@
 
 
-## Multi-Content Creation System + Navigation + Build Fix
+## Routing, Auth Guards, and Content Creation UX Optimization
 
-### Overview
-Expand the creation flow beyond quotes to support Articles, Stories, Books (multi-chapter), and Poems. Add a content type picker on `/create`, update navigation labels, and fix the existing build error.
+### Problem
+1. **`/` route always shows landing page** — logged-in users must manually navigate to `/feed`. They should be auto-redirected.
+2. **Login and Signup pages are accessible to logged-in users** — they should redirect to `/feed` if already authenticated.
+3. **Content creation UX is basic** — no word count, no auto-save indicator, no character limits, and the editor feels flat.
 
 ### Changes
 
-#### 1. Fix build error in `src/hooks/useFeed.ts`
-- Remove duplicate `caption` property on lines 9 and 13 of the `FeedItem` interface (keep one)
-- Remove duplicate `caption` mapping on line 148/164 in the feed builder
+#### 1. Smart redirect on `/` (`src/pages/Index.tsx`)
+- Import `useAuth` and check `user` / `loading` state
+- If `loading`, show a brief branded spinner (Oeuvre logo + pulse)
+- If `user` exists, `<Navigate to="/feed" replace />`
+- If no user, render the existing landing page
 
-#### 2. Update BottomNav labels (`src/components/BottomNav.tsx`)
-- Change "Novel" → "Home" (keep BookOpen icon or switch to Home icon)
-- Keep "Create", "Market", "Clubs", "Library" as-is
+#### 2. Redirect logged-in users away from auth pages (`src/pages/Login.tsx`, `src/pages/Signup.tsx`)
+- Import `useAuth` at the top of each page
+- Before rendering the form, check: if `user` exists and `!loading`, return `<Navigate to="/feed" replace />`
+- This prevents logged-in users from seeing login/signup forms
 
-#### 3. Create content type picker page (`src/pages/CreatePicker.tsx`)
-- New page at `/create` showing a grid of content types the user can create:
-  - **Quote** — "A short-form visual fragment" → navigates to `/create/quote`
-  - **Article** — "Share your thoughts and ideas" → navigates to `/create/article`
-  - **Story** — "A short story or narrative" → navigates to `/create/story`
-  - **Book** — "A multi-chapter work" → navigates to `/create/book`
-  - **Poem** — "Express through verse" → navigates to `/create/poem`
-- Each option is a card with icon, title, and description
-- Clean, minimal editorial design matching existing aesthetic
-- Keep the FAB on feed pointing to `/create`
+#### 3. Redirect logged-in users past onboarding (`src/pages/OnboardingWelcome.tsx`)
+- Same pattern: if user already has a profile with persona set, redirect to `/feed`
+- Prevents re-onboarding for returning users who land on `/onboarding` directly
 
-#### 4. Create unified long-form editor (`src/pages/ContentEditor.tsx`)
-- A single editor page that handles articles, stories, poems, and books
-- Receives content type from route param or state
-- Fields: title, body (textarea/rich text area), cover image URL (optional), tags
-- For **books**: additional "chapter" concept — user can add multiple chapters (title + body each), stored as JSON in the `body` field or as separate content entries (MVP: store chapters as a JSON array in body)
-- For **poems**: similar to article but with poem-specific styling hints
-- Top bar: back button, content type label, "Publish" button
-- Publish navigates to a unified publish settings page
+#### 4. Improve ContentEditor UX (`src/pages/ContentEditor.tsx`)
+- Add a live word count display in the footer area (updates as user types)
+- Add character count for title (max 200 chars)
+- Add subtle auto-expanding textarea behavior — textarea grows with content instead of fixed height with scroll
+- Improve chapter cards for books: add drag handle visual hint, chapter number badge, and a collapse/expand toggle
+- Add a "Unsaved changes" dot indicator in the header when content has been modified
+- Add keyboard shortcut hint: "Cmd+Enter to publish" near the Next button
 
-#### 5. Create unified publish settings (`src/pages/ContentPublishSettings.tsx`)
-- Similar to QuotePublishSettings but for all non-quote types
-- Shows: title preview, caption/description input, tags, visibility toggle
-- On publish: inserts into `contents` table with the correct `content_type`
-- Success screen with same post-publish actions
-
-#### 6. Update routes (`src/App.tsx`)
-- `/create` → `CreatePicker`
-- `/create/quote` → existing `QuoteEditor`
-- `/create/quote/publish` → existing `QuotePublishSettings`
-- `/create/:type` → `ContentEditor` (for article, story, book, poem)
-- `/create/:type/publish` → `ContentPublishSettings`
-
-#### 7. Update Feed rendering (`src/pages/Feed.tsx`)
-- Add "article", "poem" to recognized content types in `FeedItemRenderer`
-- Articles and books render via `StoryPreviewCard`
-- Poems render via `QuoteCard` (typography-first) or a dedicated poem variant
-
-#### 8. Update `QuotePublishSettings.tsx`
-- Fix navigation: back button goes to `/create/quote` instead of `/create`
-
-### Files created
-- `src/pages/CreatePicker.tsx` — content type selection grid
-- `src/pages/ContentEditor.tsx` — unified long-form editor
-- `src/pages/ContentPublishSettings.tsx` — unified publish settings
+#### 5. Improve ContentPublishSettings UX (`src/pages/ContentPublishSettings.tsx`)
+- Add character count on the description field (max 280 chars)
+- Show estimated read time based on word count (body length / 200 wpm)
+- Add a subtle content preview that shows first 3 lines of body text formatted
 
 ### Files modified
-- `src/hooks/useFeed.ts` — fix duplicate caption property
-- `src/components/BottomNav.tsx` — "Novel" → "Home"
-- `src/App.tsx` — add new routes
-- `src/pages/Feed.tsx` — handle new content types in renderer
-- `src/pages/QuotePublishSettings.tsx` — fix back navigation
+- `src/pages/Index.tsx` — auth-aware redirect
+- `src/pages/Login.tsx` — redirect if logged in
+- `src/pages/Signup.tsx` — redirect if logged in
+- `src/pages/OnboardingWelcome.tsx` — redirect if already onboarded
+- `src/pages/ContentEditor.tsx` — word count, auto-expand, chapter UX, unsaved indicator
+- `src/pages/ContentPublishSettings.tsx` — char count, read time estimate
 
-### No database changes needed
-The `content_type` enum already includes article, short_story, novel (for books), poem, and all future types (comic, research_paper, thesis, journal). No migration required.
+### Technical details
+- Auth checks use the existing `useAuth()` hook — no new context or state management
+- Auto-expanding textarea uses a `useEffect` that sets `textarea.style.height = textarea.scrollHeight + "px"` on input change
+- Word count: `body.trim().split(/\s+/).filter(Boolean).length`
+- Read time: `Math.max(1, Math.ceil(wordCount / 200))` minutes
+- No new dependencies or database changes
 
