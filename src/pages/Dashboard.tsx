@@ -97,7 +97,18 @@ export default function Dashboard() {
       setLoading(false);
     };
 
+    const checkAdmin = async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+
     fetch();
+    checkAdmin();
   }, [user]);
 
   const initials = profile?.display_name
