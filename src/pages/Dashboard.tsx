@@ -271,6 +271,7 @@ export default function Dashboard() {
         <section className="px-5 mt-8 space-y-1 animate-fade-up" style={{ animationDelay: "0.2s" }}>
           <p className="label-uppercase text-[10px] text-muted-foreground mb-2">Quick Actions</p>
           {[
+            ...(isAdmin ? [{ icon: Shield, label: "Admin Panel", action: () => navigate("/admin") }] : []),
             { icon: Plus, label: "Create New Content", action: () => navigate("/create") },
             { icon: BookOpen, label: "View Public Profile", action: () => navigate("/profile") },
             { icon: Settings, label: "Account Settings", action: () => navigate("/settings/profile") },
