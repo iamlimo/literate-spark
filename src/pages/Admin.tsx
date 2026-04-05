@@ -160,7 +160,7 @@ export default function Admin() {
     loadAdminRoles();
   };
 
-  const updateContentStatus = async (contentId: string, status: string) => {
+  const updateContentStatus = async (contentId: string, status: "draft" | "pending_review" | "published" | "rejected") => {
     const { error } = await supabase.from("contents").update({ status }).eq("id", contentId);
     if (error) { toast.error("Failed to update content"); return; }
     toast.success(`Content ${status}`);
