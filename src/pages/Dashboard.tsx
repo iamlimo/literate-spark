@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, BookOpen, Heart, Eye, FileText, Clock,
-  TrendingUp, Plus, Settings, LogOut, ChevronRight,
+  TrendingUp, Plus, Settings, LogOut, ChevronRight, Shield,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,6 +53,7 @@ export default function Dashboard() {
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [stats, setStats] = useState({ total: 0, published: 0, drafts: 0, views: 0, likes: 0 });
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -96,7 +97,18 @@ export default function Dashboard() {
       setLoading(false);
     };
 
+    const checkAdmin = async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      setIsAdmin(!!data);
+    };
+
     fetch();
+    checkAdmin();
   }, [user]);
 
   const initials = profile?.display_name
@@ -259,6 +271,7 @@ export default function Dashboard() {
         <section className="px-5 mt-8 space-y-1 animate-fade-up" style={{ animationDelay: "0.2s" }}>
           <p className="label-uppercase text-[10px] text-muted-foreground mb-2">Quick Actions</p>
           {[
+            ...(isAdmin ? [{ icon: Shield, label: "Admin Panel", action: () => navigate("/admin") }] : []),
             { icon: Plus, label: "Create New Content", action: () => navigate("/create") },
             { icon: BookOpen, label: "View Public Profile", action: () => navigate("/profile") },
             { icon: Settings, label: "Account Settings", action: () => navigate("/settings/profile") },
