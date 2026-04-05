@@ -1,54 +1,90 @@
 
 
-## Routing, Auth Guards, and Content Creation UX Optimization
+## Super Admin — Full Control Implementation
 
-### Problem
-1. **`/` route always shows landing page** — logged-in users must manually navigate to `/feed`. They should be auto-redirected.
-2. **Login and Signup pages are accessible to logged-in users** — they should redirect to `/feed` if already authenticated.
-3. **Content creation UX is basic** — no word count, no auto-save indicator, no character limits, and the editor feels flat.
+### Overview
+Add a super admin system with content moderation, user management, analytics dashboard, and role management. Uses the existing `app_role` enum (`admin`) and `user_roles` table with `has_role()` security definer function.
+
+### Architecture
+
+```text
+/admin (protected by admin role check)
+├── Dashboard tab — platform stats (users, content, engagement)
+├── Users tab — list/search users, suspend/unsuspend, assign roles
+├── Content tab — view all content, approve/reject/delete
+└── Settings tab — manage roles, platform config
+```
 
 ### Changes
 
-#### 1. Smart redirect on `/` (`src/pages/Index.tsx`)
-- Import `useAuth` and check `user` / `loading` state
-- If `loading`, show a brief branded spinner (Oeuvre logo + pulse)
-- If `user` exists, `<Navigate to="/feed" replace />`
-- If no user, render the existing landing page
+#### 1. Database migration
+- Add `is_suspended` boolean column to `profiles` (default false)
+- Add RLS policy on `profiles` allowing admins to update any profile (using `has_role()`)
+- Add RLS policy on `contents` allowing admins to update/delete any content
+- Add RLS policy on `user_roles` allowing admins to insert/delete roles
 
-#### 2. Redirect logged-in users away from auth pages (`src/pages/Login.tsx`, `src/pages/Signup.tsx`)
-- Import `useAuth` at the top of each page
-- Before rendering the form, check: if `user` exists and `!loading`, return `<Navigate to="/feed" replace />`
-- This prevents logged-in users from seeing login/signup forms
+#### 2. Create admin page (`src/pages/Admin.tsx`)
+- Tabbed layout: Dashboard, Users, Content, Settings
+- **Dashboard tab**: aggregate queries — total users, total content by status, total likes/saves/follows, recent signups
+- **Users tab**: paginated user list with search, each row shows avatar, name, username, persona, role badges, join date. Actions: toggle suspend, assign/remove admin role
+- **Content tab**: filterable list of all content (any status). Actions: publish, reject, delete. Status badges and author info shown
+- **Settings tab**: role management overview, platform stats summary
 
-#### 3. Redirect logged-in users past onboarding (`src/pages/OnboardingWelcome.tsx`)
-- Same pattern: if user already has a profile with persona set, redirect to `/feed`
-- Prevents re-onboarding for returning users who land on `/onboarding` directly
+#### 3. Create admin route guard (`src/components/AdminRoute.tsx`)
+- Wraps children, checks `user_roles` for `admin` role using Supabase query
+- Shows "Access denied" if not admin
+- Loading state while checking
 
-#### 4. Improve ContentEditor UX (`src/pages/ContentEditor.tsx`)
-- Add a live word count display in the footer area (updates as user types)
-- Add character count for title (max 200 chars)
-- Add subtle auto-expanding textarea behavior — textarea grows with content instead of fixed height with scroll
-- Improve chapter cards for books: add drag handle visual hint, chapter number badge, and a collapse/expand toggle
-- Add a "Unsaved changes" dot indicator in the header when content has been modified
-- Add keyboard shortcut hint: "Cmd+Enter to publish" near the Next button
+#### 4. Add route in `App.tsx`
+- `/admin` → `<AdminRoute><Admin /></AdminRoute>`
 
-#### 5. Improve ContentPublishSettings UX (`src/pages/ContentPublishSettings.tsx`)
-- Add character count on the description field (max 280 chars)
-- Show estimated read time based on word count (body length / 200 wpm)
-- Add a subtle content preview that shows first 3 lines of body text formatted
+#### 5. Add admin link in Dashboard quick actions
+- Show "Admin Panel" link only when user has admin role (check via query on mount)
+
+### Files created
+- `src/pages/Admin.tsx` — full admin panel with 4 tabs
+- `src/components/AdminRoute.tsx` — role-based route guard
 
 ### Files modified
-- `src/pages/Index.tsx` — auth-aware redirect
-- `src/pages/Login.tsx` — redirect if logged in
-- `src/pages/Signup.tsx` — redirect if logged in
-- `src/pages/OnboardingWelcome.tsx` — redirect if already onboarded
-- `src/pages/ContentEditor.tsx` — word count, auto-expand, chapter UX, unsaved indicator
-- `src/pages/ContentPublishSettings.tsx` — char count, read time estimate
+- `src/App.tsx` — add `/admin` route
+- `src/pages/Dashboard.tsx` — conditionally show admin panel link
 
-### Technical details
-- Auth checks use the existing `useAuth()` hook — no new context or state management
-- Auto-expanding textarea uses a `useEffect` that sets `textarea.style.height = textarea.scrollHeight + "px"` on input change
-- Word count: `body.trim().split(/\s+/).filter(Boolean).length`
-- Read time: `Math.max(1, Math.ceil(wordCount / 200))` minutes
-- No new dependencies or database changes
+### Database migration
+```sql
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_suspended boolean DEFAULT false;
+
+-- Admins can update any profile
+CREATE POLICY "Admins can update any profile"
+ON public.profiles FOR UPDATE TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
+
+-- Admins can update any content
+CREATE POLICY "Admins can update any content"
+ON public.contents FOR UPDATE TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
+
+-- Admins can delete any content
+CREATE POLICY "Admins can delete any content"
+ON public.contents FOR DELETE TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
+
+-- Admins can manage roles
+CREATE POLICY "Admins can insert roles"
+ON public.user_roles FOR INSERT TO authenticated
+WITH CHECK (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Admins can delete roles"
+ON public.user_roles FOR DELETE TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
+
+-- Admins can view all roles
+CREATE POLICY "Admins can view all roles"
+ON public.user_roles FOR SELECT TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
+```
+
+### Security notes
+- Admin status checked server-side via `has_role()` security definer function — no client-side spoofing possible
+- RLS policies ensure only admins can modify other users' content/roles
+- Suspended users' content remains visible but they cannot create new content (enforced in app layer)
 
