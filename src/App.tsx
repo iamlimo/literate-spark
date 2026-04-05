@@ -20,6 +20,8 @@ import ContentEditor from "./pages/ContentEditor";
 import ContentPublishSettings from "./pages/ContentPublishSettings";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
+import Admin from "./pages/Admin";
+import AdminRoute from "./components/AdminRoute";
 import ProfileEdit from "./pages/ProfileEdit";
 
 const queryClient = new QueryClient();
