@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, BookOpen, Heart, Eye, FileText, Clock,
-  TrendingUp, Plus, Settings, LogOut, ChevronRight,
+  TrendingUp, Plus, Settings, LogOut, ChevronRight, Shield,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
