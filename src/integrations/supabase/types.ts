@@ -282,6 +282,7 @@ export type Database = {
           display_name: string
           id: string
           interests: string[] | null
+          is_suspended: boolean | null
           persona: Database["public"]["Enums"]["persona_type"] | null
           updated_at: string
           user_id: string
@@ -294,6 +295,7 @@ export type Database = {
           display_name: string
           id?: string
           interests?: string[] | null
+          is_suspended?: boolean | null
           persona?: Database["public"]["Enums"]["persona_type"] | null
           updated_at?: string
           user_id: string
@@ -306,6 +308,7 @@ export type Database = {
           display_name?: string
           id?: string
           interests?: string[] | null
+          is_suspended?: boolean | null
           persona?: Database["public"]["Enums"]["persona_type"] | null
           updated_at?: string
           user_id?: string
