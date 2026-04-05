@@ -53,6 +53,7 @@ export default function Dashboard() {
   const [contents, setContents] = useState<ContentItem[]>([]);
   const [stats, setStats] = useState({ total: 0, published: 0, drafts: 0, views: 0, likes: 0 });
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!user) return;
