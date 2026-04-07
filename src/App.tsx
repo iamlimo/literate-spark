@@ -20,6 +20,7 @@ import ContentEditor from "./pages/ContentEditor";
 import ContentPublishSettings from "./pages/ContentPublishSettings";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
+import Library from "./pages/Library";
 import Admin from "./pages/Admin";
 import AdminRoute from "./components/AdminRoute";
 import ProfileEdit from "./pages/ProfileEdit";
