@@ -246,6 +246,7 @@ export default function Admin() {
               { value: "dashboard", icon: BarChart3, label: "Overview" },
               { value: "users", icon: Users, label: "Users" },
               { value: "content", icon: FileText, label: "Content" },
+              { value: "clubs", icon: MessageSquare, label: "Clubs" },
               { value: "settings", icon: Settings, label: "Settings" },
             ].map(({ value, icon: Icon, label }) => (
               <TabsTrigger
