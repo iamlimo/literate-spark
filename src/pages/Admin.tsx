@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Users, FileText, BarChart3, Settings,
   Shield, ShieldOff, Trash2, CheckCircle, XCircle,
-  Search, ChevronRight,
+  Search, ChevronRight, Plus, Globe, Lock, MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -187,6 +187,41 @@ export default function Admin() {
     (c) => contentFilter === "all" || c.status === contentFilter
   );
 
+  // Club management state
+  const [clubs, setClubs] = useState<any[]>([]);
+  const [showClubForm, setShowClubForm] = useState(false);
+  const [clubForm, setClubForm] = useState({ name: "", description: "", cover_image_url: "", is_private: false });
+  const [clubSaving, setClubSaving] = useState(false);
+
+  const loadClubs = async () => {
+    const { data } = await supabase.from("clubs").select("*").order("created_at", { ascending: false });
+    setClubs(data || []);
+  };
+
+  useEffect(() => { loadClubs(); }, []);
+
+  const createClub = async () => {
+    if (!clubForm.name.trim() || !user) return;
+    setClubSaving(true);
+    const { error } = await supabase.from("clubs").insert({
+      name: clubForm.name.trim(),
+      description: clubForm.description.trim() || null,
+      cover_image_url: clubForm.cover_image_url.trim() || null,
+      is_private: clubForm.is_private,
+      created_by: user.id,
+    });
+    if (error) { toast.error("Failed to create club"); }
+    else { toast.success("Club created"); setShowClubForm(false); setClubForm({ name: "", description: "", cover_image_url: "", is_private: false }); loadClubs(); }
+    setClubSaving(false);
+  };
+
+  const deleteClub = async (clubId: string) => {
+    const { error } = await supabase.from("clubs").delete().eq("id", clubId);
+    if (error) { toast.error("Failed to delete club"); return; }
+    toast.success("Club deleted");
+    loadClubs();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -211,6 +246,7 @@ export default function Admin() {
               { value: "dashboard", icon: BarChart3, label: "Overview" },
               { value: "users", icon: Users, label: "Users" },
               { value: "content", icon: FileText, label: "Content" },
+              { value: "clubs", icon: MessageSquare, label: "Clubs" },
               { value: "settings", icon: Settings, label: "Settings" },
             ].map(({ value, icon: Icon, label }) => (
               <TabsTrigger
@@ -367,6 +403,81 @@ export default function Admin() {
                 {filteredContents.length === 0 && (
                   <p className="text-center text-sm text-muted-foreground py-8">No content found.</p>
                 )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Clubs Tab */}
+          <TabsContent value="clubs">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display text-sm font-semibold">Clubs ({clubs.length})</h3>
+                <Button size="sm" onClick={() => setShowClubForm(!showClubForm)} className="gap-1.5">
+                  <Plus className="w-3.5 h-3.5" /> Create Club
+                </Button>
+              </div>
+
+              {showClubForm && (
+                <div className="bg-card border border-border rounded-sm p-5 space-y-3 animate-fade-up">
+                  <Input
+                    placeholder="Club name *"
+                    value={clubForm.name}
+                    onChange={(e) => setClubForm(f => ({ ...f, name: e.target.value }))}
+                  />
+                  <textarea
+                    placeholder="Description (optional)"
+                    value={clubForm.description}
+                    onChange={(e) => setClubForm(f => ({ ...f, description: e.target.value }))}
+                    className="w-full bg-secondary rounded-sm p-3 text-sm outline-none resize-none min-h-[60px] placeholder:text-muted-foreground/50"
+                    rows={2}
+                  />
+                  <Input
+                    placeholder="Cover image URL (optional)"
+                    value={clubForm.cover_image_url}
+                    onChange={(e) => setClubForm(f => ({ ...f, cover_image_url: e.target.value }))}
+                  />
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setClubForm(f => ({ ...f, is_private: !f.is_private }))}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-sm text-xs transition-colors ${
+                        clubForm.is_private ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      {clubForm.is_private ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+                      {clubForm.is_private ? "Private" : "Public"}
+                    </button>
+                    <div className="flex-1" />
+                    <Button variant="ghost" size="sm" onClick={() => setShowClubForm(false)}>Cancel</Button>
+                    <Button size="sm" onClick={createClub} disabled={!clubForm.name.trim() || clubSaving}>
+                      {clubSaving ? "Creating…" : "Create"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                {clubs.map((club) => (
+                  <div key={club.id} className="flex items-center gap-3 py-3 border-b border-border last:border-0">
+                    <div className="w-10 h-10 rounded-sm bg-secondary flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {club.cover_image_url ? (
+                        <img src={club.cover_image_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <MessageSquare className="w-4 h-4 text-muted-foreground/50" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-display text-sm font-semibold truncate">{club.name}</span>
+                        {club.is_private && <Badge variant="secondary" className="text-[8px] label-uppercase">Private</Badge>}
+                      </div>
+                      {club.description && <p className="text-[10px] text-muted-foreground truncate">{club.description}</p>}
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteClub(club.id)} title="Delete">
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                {clubs.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No clubs yet.</p>}
               </div>
             </div>
           </TabsContent>

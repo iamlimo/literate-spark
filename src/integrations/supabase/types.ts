@@ -351,6 +351,41 @@ export type Database = {
           },
         ]
       }
+      reading_history: {
+        Row: {
+          content_id: string
+          created_at: string
+          id: string
+          last_read_at: string
+          progress: number
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          progress?: number
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          progress?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_history_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saves: {
         Row: {
           content_id: string

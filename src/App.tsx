@@ -20,6 +20,7 @@ import ContentEditor from "./pages/ContentEditor";
 import ContentPublishSettings from "./pages/ContentPublishSettings";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
+import Library from "./pages/Library";
 import Admin from "./pages/Admin";
 import AdminRoute from "./components/AdminRoute";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/create/:type" element={<ProtectedRoute><ContentEditor /></ProtectedRoute>} />
             <Route path="/create/:type/publish" element={<ProtectedRoute><ContentPublishSettings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
