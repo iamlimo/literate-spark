@@ -407,6 +407,81 @@ export default function Admin() {
             </div>
           </TabsContent>
 
+          {/* Clubs Tab */}
+          <TabsContent value="clubs">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display text-sm font-semibold">Clubs ({clubs.length})</h3>
+                <Button size="sm" onClick={() => setShowClubForm(!showClubForm)} className="gap-1.5">
+                  <Plus className="w-3.5 h-3.5" /> Create Club
+                </Button>
+              </div>
+
+              {showClubForm && (
+                <div className="bg-card border border-border rounded-sm p-5 space-y-3 animate-fade-up">
+                  <Input
+                    placeholder="Club name *"
+                    value={clubForm.name}
+                    onChange={(e) => setClubForm(f => ({ ...f, name: e.target.value }))}
+                  />
+                  <textarea
+                    placeholder="Description (optional)"
+                    value={clubForm.description}
+                    onChange={(e) => setClubForm(f => ({ ...f, description: e.target.value }))}
+                    className="w-full bg-secondary rounded-sm p-3 text-sm outline-none resize-none min-h-[60px] placeholder:text-muted-foreground/50"
+                    rows={2}
+                  />
+                  <Input
+                    placeholder="Cover image URL (optional)"
+                    value={clubForm.cover_image_url}
+                    onChange={(e) => setClubForm(f => ({ ...f, cover_image_url: e.target.value }))}
+                  />
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setClubForm(f => ({ ...f, is_private: !f.is_private }))}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-sm text-xs transition-colors ${
+                        clubForm.is_private ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      {clubForm.is_private ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+                      {clubForm.is_private ? "Private" : "Public"}
+                    </button>
+                    <div className="flex-1" />
+                    <Button variant="ghost" size="sm" onClick={() => setShowClubForm(false)}>Cancel</Button>
+                    <Button size="sm" onClick={createClub} disabled={!clubForm.name.trim() || clubSaving}>
+                      {clubSaving ? "Creating…" : "Create"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                {clubs.map((club) => (
+                  <div key={club.id} className="flex items-center gap-3 py-3 border-b border-border last:border-0">
+                    <div className="w-10 h-10 rounded-sm bg-secondary flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {club.cover_image_url ? (
+                        <img src={club.cover_image_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <MessageSquare className="w-4 h-4 text-muted-foreground/50" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-display text-sm font-semibold truncate">{club.name}</span>
+                        {club.is_private && <Badge variant="secondary" className="text-[8px] label-uppercase">Private</Badge>}
+                      </div>
+                      {club.description && <p className="text-[10px] text-muted-foreground truncate">{club.description}</p>}
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => deleteClub(club.id)} title="Delete">
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                {clubs.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">No clubs yet.</p>}
+              </div>
+            </div>
+          </TabsContent>
+
           {/* Settings Tab */}
           <TabsContent value="settings">
             <div className="space-y-6">
