@@ -187,6 +187,41 @@ export default function Admin() {
     (c) => contentFilter === "all" || c.status === contentFilter
   );
 
+  // Club management state
+  const [clubs, setClubs] = useState<any[]>([]);
+  const [showClubForm, setShowClubForm] = useState(false);
+  const [clubForm, setClubForm] = useState({ name: "", description: "", cover_image_url: "", is_private: false });
+  const [clubSaving, setClubSaving] = useState(false);
+
+  const loadClubs = async () => {
+    const { data } = await supabase.from("clubs").select("*").order("created_at", { ascending: false });
+    setClubs(data || []);
+  };
+
+  useEffect(() => { loadClubs(); }, []);
+
+  const createClub = async () => {
+    if (!clubForm.name.trim() || !user) return;
+    setClubSaving(true);
+    const { error } = await supabase.from("clubs").insert({
+      name: clubForm.name.trim(),
+      description: clubForm.description.trim() || null,
+      cover_image_url: clubForm.cover_image_url.trim() || null,
+      is_private: clubForm.is_private,
+      created_by: user.id,
+    });
+    if (error) { toast.error("Failed to create club"); }
+    else { toast.success("Club created"); setShowClubForm(false); setClubForm({ name: "", description: "", cover_image_url: "", is_private: false }); loadClubs(); }
+    setClubSaving(false);
+  };
+
+  const deleteClub = async (clubId: string) => {
+    const { error } = await supabase.from("clubs").delete().eq("id", clubId);
+    if (error) { toast.error("Failed to delete club"); return; }
+    toast.success("Club deleted");
+    loadClubs();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
