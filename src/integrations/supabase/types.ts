@@ -438,6 +438,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_purchase: { Args: { _listing_id: string }; Returns: string }
       get_email_by_username: { Args: { _username: string }; Returns: string }
       has_role: {
         Args: {
@@ -446,6 +447,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_suspended: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
